@@ -1,0 +1,3 @@
+
+cdef class Index:
+	pass

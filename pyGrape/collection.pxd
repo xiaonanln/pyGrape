@@ -3,7 +3,8 @@ cimport indexing
 cdef class Collection:
 
 	cdef readonly str name 
-	cdef indexing.Index primary_index
+	cdef dict indexes
+	cdef indexing.Index _idIndex
 
 	cpdef insert(self, doc_or_docs)
 
@@ -11,4 +12,6 @@ cdef class Collection:
 
 	cpdef remove(self, dict query)
 
-	cpdef create_index(self, keys)
+	cpdef createIndex(self, keys)
+
+	cdef _insert(self, dict doc)

@@ -1,0 +1,1 @@
+ipython --no-banner

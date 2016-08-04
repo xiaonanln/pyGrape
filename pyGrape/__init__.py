@@ -5,3 +5,4 @@ DESCENDING = -1
 """Descending sort order."""
 
 import test
+import collection

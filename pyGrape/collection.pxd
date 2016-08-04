@@ -1,4 +1,4 @@
-from . cimport indexing
+cimport indexing
 
 cdef class Collection:
 

@@ -1,9 +1,5 @@
-from . cimport indexing
 
 cdef class Collection:
-
-	cdef readonly str name 
-	cdef indexing.Index primary_index
 
 	def __cinit__(self, str name):
 		print '%s.__cinit__ %s' % (self, name)

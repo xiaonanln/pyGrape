@@ -15,3 +15,7 @@ cdef class Collection:
 	cpdef createIndex(self, keys)
 
 	cdef _insert(self, dict doc)
+
+	cdef _updateOne(self, dict filter, dict update, bint upsert)
+
+	cdef list _getSearchPlan(self, dict query)

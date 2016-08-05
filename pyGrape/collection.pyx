@@ -1,4 +1,8 @@
+
 from indexing cimport Index 
+from indexing cimport Traveller
+from indexing cimport MIN_VALUE, MAX_VALUE, VALUE_NOT_EXISTS
+
 cimport objectid
 from errors import DuplicateIndexError
 
@@ -22,8 +26,33 @@ cdef class Collection:
 		else:
 			self._insert(doc_or_docs)
 
+	def updateOne(self, dict filter, dict update, bint upsert=False):
+		return self._updateOne(filter, update, upsert)
+
+	cdef _updateOne(self, dict filter, dict update, bint upsert):
+		pass
+
 	cpdef find(self, dict query):
 		print 'find', query
+		cdef list searchPlan = self._getSearchPlan(query)
+		cdef Traveller tr
+		cdef list docs = []
+		cdef dict doc
+
+		for index, minValues, maxValues, order, q in searchPlan:
+			print 'search', index, minValues, '->', maxValues, 'order', order, 'query', q
+			tr = Traveller(index, minValues, maxValues, order)
+
+			for doc in tr:
+				docs.append(doc)
+
+		return docs 
+
+	cdef list _getSearchPlan(self, dict query):
+		cdef list searchPlan = [
+			(self._idIndex, (MIN_VALUE, ), (MAX_VALUE, ), 1, query), 
+		]
+		return searchPlan
 
 	cpdef remove(self, dict query):
 		pass
@@ -43,7 +72,6 @@ cdef class Collection:
 		if '_id' not in doc:
 			doc['_id'] = objectid.newObjectId()
 		
-		for indexName, index in self.indexes.iteritems():
+		for indexKeys, index in self.indexes.iteritems():
 			indexValues = index.getIndexValues( doc ) # get the index value of doc
 			index.insert( indexValues, doc )
-			print index

@@ -15,3 +15,5 @@ print c.insert({})
 print c.insert({'a': 100})
 print c.find({})
 print c.find({'a': 100})
+
+print c.updateOne({}, {'a': 200})

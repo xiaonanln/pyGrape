@@ -1,7 +1,7 @@
 
 from indexing cimport Index 
 from indexing cimport Traveller
-from indexing cimport MIN_VALUE, MAX_VALUE, VALUE_NOT_EXISTS
+from indexing cimport MIN_VALUE, MAX_VALUE
 
 cimport objectid
 from errors import DuplicateIndexError
@@ -18,41 +18,114 @@ cdef class Collection:
 			PRIMARY_INDEX_KEYS : self._idIndex, 
 		}
 
-	cpdef insert(self, doc_or_docs):
-		print 'insert', doc_or_docs
+	cpdef insertOne(self, doc_or_docs):
 		if isinstance(doc_or_docs, list):
 			for doc in doc_or_docs:
-				self._insert( doc )
+				self._insertOne( doc )
 		else:
-			self._insert(doc_or_docs)
+			self._insertOne(doc_or_docs)
 
-	def updateOne(self, dict filter, dict update, bint upsert=False):
-		return self._updateOne(filter, update, upsert)
+	def updateOne(self, dict query, dict update, bint upsert=False):
+		return self._updateOne(query, update, upsert)
 
-	cdef _updateOne(self, dict filter, dict update, bint upsert):
-		pass
-
-	cpdef find(self, dict query):
-		print 'find', query
-		cdef list searchPlan = self._getSearchPlan(query)
+	cdef _updateOne(self, dict query, dict update, bint upsert):
+		# print 'updateOne', query, update, 'upsert', upsert
+		cdef list searchPlan = self._generateTravelPlan(query)
 		cdef Traveller tr
 		cdef list docs = []
 		cdef dict doc
+		cdef dict oneDoc
+		cdef int order 
+		cdef dict q
+		cdef Index index
 
 		for index, minValues, maxValues, order, q in searchPlan:
-			print 'search', index, minValues, '->', maxValues, 'order', order, 'query', q
+			print 'travel', index, minValues, '->', maxValues, 'order', order, 'query', q
 			tr = Traveller(index, minValues, maxValues, order)
 
 			for doc in tr:
-				docs.append(doc)
+				if self._matchDocWithQuery(doc, q):
+					oneDoc = doc
+					break
 
-		return docs 
+		if oneDoc is None:
+			return 0
 
-	cdef list _getSearchPlan(self, dict query):
-		cdef list searchPlan = [
-			(self._idIndex, (MIN_VALUE, ), (MAX_VALUE, ), 1, query), 
+		cdef list indexValuesList = [(index, index.getIndexValues(oneDoc)) for index in self.indexes.itervalues()]
+
+		oneDoc.clear()
+		oneDoc.update(update) # update the doc
+
+		for index, oldIndexValues in indexValuesList:
+			index.update(oneDoc, oldIndexValues)
+
+	cpdef find(self, dict query):
+		# print 'find', query
+		cdef list searchPlan = self._generateTravelPlan(query)
+		cdef Traveller tr
+		cdef list docs = []
+		cdef dict doc
+		cdef int order 
+		cdef dict q
+		cdef Index index
+
+		for index, minValues, maxValues, order, q in searchPlan:
+			print 'travel', index, minValues, '->', maxValues, 'order', order, 'query', q
+			tr = Traveller(index, minValues, maxValues, order)
+
+			for doc in tr:
+				if self._matchDocWithQuery(doc, q):
+					docs.append(doc)
+
+		return docs  
+
+	cdef list _generateTravelPlan(self, dict query):
+		cdef bint allKeysFoundInQuery
+		cdef tuple indexKeys
+		cdef Index index
+
+		cdef Index longestIndex = None # find the longest matching index 
+		cdef size_t longestIndexLen = 0
+		cdef size_t indexKeysLen
+
+		cdef list totalTravelPlan
+
+		for indexKeys, index in self.indexes.iteritems():
+			# check if this index can be used
+			allKeysFoundInQuery = True
+			for key, order in indexKeys:
+				if key not in query: 
+					allKeysFoundInQuery = False
+					break 
+
+			if not allKeysFoundInQuery:
+				continue 
+
+			indexKeysLen = len(indexKeys)
+			if indexKeysLen > longestIndexLen:
+				longestIndex = index 
+				longestIndexLen = indexKeysLen
+
+		if longestIndex is None:
+			totalTravelPlan = [
+				(self._idIndex, (MIN_VALUE, ), (MAX_VALUE, ), 1, query), 
+			]
+			return totalTravelPlan
+
+		minValues = index.getIndexValues(query)
+		maxValues = index.getIndexValues(query)
+		return [
+			(longestIndex, minValues, maxValues, 1, query)
 		]
-		return searchPlan
+
+	cdef bint _matchDocWithQuery(self, dict doc, dict query):
+		cdef str field
+		for field, v in query.iteritems():
+			val = doc.get(field)
+			if val != v:
+				return False 
+
+		return True 
 
 	cpdef remove(self, dict query):
 		pass
@@ -64,7 +137,7 @@ cdef class Collection:
 
 		self.indexes[indexKeys] = Index( indexKeys )
 
-	cdef _insert(self, dict doc):
+	cdef _insertOne(self, dict doc):
 		cdef tuple indexKeys
 		cdef Index index
 		cdef tuple indexValues
@@ -73,5 +146,4 @@ cdef class Collection:
 			doc['_id'] = objectid.newObjectId()
 		
 		for indexKeys, index in self.indexes.iteritems():
-			indexValues = index.getIndexValues( doc ) # get the index value of doc
-			index.insert( indexValues, doc )
+			index.insert( doc )

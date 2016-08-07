@@ -7,13 +7,28 @@ import pyGrape
 from pyGrape.collection import Collection
 
 c = Collection("test")
-print c, c.name
 c.createIndex( [('a', 1), ] )
 c.createIndex( [('a', -1), ] )
 
-print c.insert({})
-print c.insert({'a': 100})
-print c.find({})
-print c.find({'a': 100})
+def testInsertOne(doc):
+	print '>>> insertOne doc %s: %s' % (doc, c.insertOne(doc))
 
-print c.updateOne({}, {'a': 200})
+def testFind(query):
+	docs = c.find(query)
+	print '>>> Find docs %s: %s' % (query, docs)
+
+def testUpdateOne(query, update):
+	ret = c.updateOne(query, update)
+	print '>>> updateOne %s: %s: %s' % (query, update, ret)
+
+testInsertOne({})
+testInsertOne({'a': 100})
+
+testFind({})
+testFind({'a': 100})
+testFind({'a': 200})
+
+testUpdateOne({}, {'a': 200})
+testFind({})
+testFind({'a': 100})
+testFind({'a': 200})

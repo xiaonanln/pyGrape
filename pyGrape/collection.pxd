@@ -6,7 +6,7 @@ cdef class Collection:
 	cdef dict indexes
 	cdef indexing.Index _idIndex
 
-	cpdef insert(self, doc_or_docs)
+	cpdef insertOne(self, doc_or_docs)
 
 	cpdef find(self, dict query)
 
@@ -14,8 +14,10 @@ cdef class Collection:
 
 	cpdef createIndex(self, keys)
 
-	cdef _insert(self, dict doc)
+	cdef _insertOne(self, dict doc)
 
 	cdef _updateOne(self, dict filter, dict update, bint upsert)
 
-	cdef list _getSearchPlan(self, dict query)
+	cdef list _generateTravelPlan(self, dict query)
+
+	cdef bint _matchDocWithQuery(self, dict doc, dict query)

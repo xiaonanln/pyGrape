@@ -36,6 +36,10 @@ cdef class Index:
 		except KeyError:
 			self.docs[indexValues] = [doc]
 
+	cdef void remove(self, dict doc):
+		cdef tuple indexValues = self.getIndexValues( doc ) # get the index value of doc
+		self.docs[indexValues].remove(doc)
+
 	cdef void update(self, dict doc, tuple oldIndexValues):
 		cdef tuple newIndexValues = self.getIndexValues(doc)
 
@@ -55,7 +59,7 @@ cdef class Index:
 		cdef tuple vals = tuple(doc.get(key) for key, _order in self.indexKeys)
 		return vals 
 
-cdef class Traveller:
+cdef class IndexTraveller:
 
 	def __cinit__(self, Index index, minValues, maxValues, int order):
 		self.index = index

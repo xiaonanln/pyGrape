@@ -21,6 +21,14 @@ def testUpdateOne(query, update):
 	ret = c.updateOne(query, update)
 	print '>>> updateOne %s: %s: %s' % (query, update, ret)
 
+def testUpdateMany(query, update):
+	ret = c.updateMany(query, update)
+	print '>>> updateMany %s: %s: %s' % (query, update, ret)
+
+def testRemove(query):
+	ret = c.remove(query)
+	print '>>> remove %s: %s' % (query, ret)
+
 testInsertOne({})
 testInsertOne({'a': 100})
 
@@ -30,5 +38,16 @@ testFind({'a': 200})
 
 testUpdateOne({}, {'a': 200})
 testFind({})
+
+testUpdateMany({}, {'a': 999})
+testFind({})
+
 testFind({'a': 100})
-testFind({'a': 200})
+testFind({'a': 999})
+
+testRemove({'a': 100})
+testFind({})
+
+testRemove({'a': 999})
+testFind({'a': 999})
+testFind({})

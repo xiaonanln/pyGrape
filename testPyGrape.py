@@ -43,7 +43,7 @@ testUpdateMany({}, {'a': 999})
 testFind({})
 
 testFind({'a': 100})
-testFind({'a': 999})
+testFind({'a': 999}) 
 
 testRemove({'a': 100})
 testFind({})

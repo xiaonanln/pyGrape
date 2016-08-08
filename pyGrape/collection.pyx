@@ -1,5 +1,5 @@
 
-from indexing cimport Index 
+from indexing cimport Index
 from indexing cimport IndexTraveller
 from indexing cimport MIN_VALUE, MAX_VALUE
 
@@ -17,18 +17,18 @@ cdef bint _matchDocWithQuery(dict doc, dict query):
 		val = doc.get(field)
 		if val != v:
 			print '_matchDocWithQuery', doc, query, False
-			return False 
+			return False
 
 	print '_matchDocWithQuery', doc, query, True
-	return True 
+	return True
 
 cdef class Collection:
 
 	def __cinit__(self, str name):
-		self.name = name 
+		self.name = name
 		self._idIndex = Index( PRIMARY_INDEX_KEYS )
 		self.indexes = {
-			PRIMARY_INDEX_KEYS : self._idIndex, 
+			PRIMARY_INDEX_KEYS : self._idIndex,
 		}
 
 	cpdef dict insertOne(self, dict doc):
@@ -38,11 +38,11 @@ cdef class Collection:
 
 		if '_id' not in doc:
 			doc['_id'] = objectid.newObjectId()
-		
+
 		for indexKeys, index in self.indexes.iteritems():
 			index.insert( doc )
 
-		return doc 
+		return doc
 
 	def updateOne(self, dict query, dict update, bint upsert=False):
 		return self._updateOne(query, update, upsert)
@@ -53,7 +53,7 @@ cdef class Collection:
 		cdef IndexTraveller tr
 		cdef dict doc
 		cdef dict oneDoc
-		cdef int order 
+		cdef int order
 		cdef dict q
 		cdef Index index
 
@@ -87,10 +87,10 @@ cdef class Collection:
 		cdef set visited = set()
 		cdef list docs = []
 		cdef dict doc
-		cdef int order 
+		cdef int order
 		cdef dict q
 		cdef Index index
-		cdef int docid
+		cdef long docid
 
 		for index, minValues, maxValues, order, q in searchPlan:
 			print 'travel', index, minValues, '->', maxValues, 'order', order, 'query', q
@@ -98,7 +98,7 @@ cdef class Collection:
 
 			for doc in tr:
 				docid = id(doc)
-				if docid in visited: continue 
+				if docid in visited: continue
 				visited.add(docid)
 				if _matchDocWithQuery(doc, q):
 					docs.append(doc)
@@ -113,7 +113,7 @@ cdef class Collection:
 			for index, oldIndexValues in indexValuesList:
 				index.update(doc, oldIndexValues)
 
-		return docs 
+		return docs
 
 	cpdef list find(self, dict query):
 		# print 'find', query
@@ -121,10 +121,10 @@ cdef class Collection:
 		cdef IndexTraveller tr
 		cdef list docs = []
 		cdef dict doc
-		cdef int order 
+		cdef int order
 		cdef dict q
 		cdef Index index
-		cdef int docid
+		cdef long docid
 		cdef set visited = set()
 
 		for index, minValues, maxValues, order, q in searchPlan:
@@ -133,20 +133,20 @@ cdef class Collection:
 
 			for doc in tr:
 				docid = id(doc)
-				if docid in visited: continue 
+				if docid in visited: continue
 				visited.add(docid)
 
 				if _matchDocWithQuery(doc, q):
 					docs.append(doc)
 
-		return docs 
+		return docs
 
 	cdef list _generateTravelPlan(self, dict query):
 		cdef bint allKeysFoundInQuery
 		cdef tuple indexKeys
 		cdef Index index
 
-		cdef Index longestIndex = None # find the longest matching index 
+		cdef Index longestIndex = None # find the longest matching index
 		cdef size_t longestIndexLen = 0
 		cdef size_t indexKeysLen
 
@@ -156,21 +156,21 @@ cdef class Collection:
 			# check if this index can be used
 			allKeysFoundInQuery = True
 			for key, order in indexKeys:
-				if key not in query: 
+				if key not in query:
 					allKeysFoundInQuery = False
-					break 
+					break
 
 			if not allKeysFoundInQuery:
-				continue 
+				continue
 
 			indexKeysLen = len(indexKeys)
 			if indexKeysLen > longestIndexLen:
-				longestIndex = index 
+				longestIndex = index
 				longestIndexLen = indexKeysLen
 
 		if longestIndex is None:
 			totalTravelPlan = [
-				(self._idIndex, (MIN_VALUE, ), (MAX_VALUE, ), 1, query), 
+				(self._idIndex, (MIN_VALUE, ), (MAX_VALUE, ), 1, query),
 			]
 			return totalTravelPlan
 
@@ -185,12 +185,12 @@ cdef class Collection:
 		cdef list searchPlan = self._generateTravelPlan(query)
 		cdef IndexTraveller tr
 		cdef dict doc
-		cdef int order 
+		cdef int order
 		cdef dict q
 		cdef Index index
 		cdef int counter
 
-		cdef int docid
+		cdef long docid
 		cdef set visited = set()
 		cdef list docs = []
 
@@ -200,7 +200,7 @@ cdef class Collection:
 
 			for doc in tr:
 				docid = id(doc)
-				if docid in visited: continue 
+				if docid in visited: continue
 				visited.add(docid)
 
 				if _matchDocWithQuery(doc, q):

@@ -1,7 +1,12 @@
 import os
 
-if os.system('buildPyGrape.bat') != 0:
-	exit(1)
+if os.name == 'nt':
+	if os.system('buildPyGrape.bat') != 0:
+		exit(1)
+elif os.name == 'posix':
+	if os.system('make buildlib') != 0:
+		exit(1)
+
 
 import pyGrape
 from pyGrape.collection import Collection

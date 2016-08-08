@@ -4,5 +4,5 @@ import os
 
 setup(
   name = 'pyGrape',
-  ext_modules = cythonize('pyGrape/*.pyx'),
+  ext_modules = cythonize(['pyGrape/*.pyx', 'pyGrape/*.c']),
 )

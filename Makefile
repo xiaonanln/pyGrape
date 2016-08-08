@@ -5,3 +5,10 @@ buildlib:
 
 test:
 	python testPyGrape.py
+
+clean:
+	python buildPyGrape.py clean
+
+cleantmp:
+	rm -rf *~
+	rm -rf pyGrape/*~

@@ -4,5 +4,6 @@ ASCENDING = 1
 DESCENDING = -1
 """Descending sort order."""
 
+import cython_trees
 import test
 import collection

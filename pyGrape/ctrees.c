@@ -8,6 +8,10 @@
 #define XDATA(node)	((node)->xdata)
 #define RED(node)	((node)->xdata)
 
+void initctrees()
+{
+}
+
 static node_t *
 ct_new_node(PyObject *key, PyObject *value, int xdata)
 {
@@ -97,6 +101,7 @@ ct_find_node(node_t *root, PyObject *key)
 
 int ct_bintree_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 {
+	int cval;
 	while (1) {
 		node_t *root = *rootaddr;
 		if (root == NULL) {
@@ -106,7 +111,7 @@ int ct_bintree_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 			return 1;
 		}
 
-		int cval = ct_compare(key, KEY(root));
+		cval = ct_compare(key, KEY(root));
 		if (cval < 0) {
 			// use left tree
 			rootaddr = &LEFT(root);
@@ -123,6 +128,7 @@ int ct_bintree_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 int
 ct_bintree_remove(node_t **rootaddr, PyObject *key)
 {
+	int cmp_res;
 	while (1) {
 		node_t *root = *rootaddr;
 		if (root == NULL) {
@@ -130,7 +136,7 @@ ct_bintree_remove(node_t **rootaddr, PyObject *key)
 			return 0;
 		}
 
-		int cmp_res = ct_compare(key, KEY(root));
+		cmp_res = ct_compare(key, KEY(root));
 		if (cmp_res < 0) {
 			// use left tree
 			rootaddr = &LEFT(root);

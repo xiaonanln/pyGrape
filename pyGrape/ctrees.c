@@ -99,7 +99,7 @@ ct_find_node(node_t *root, PyObject *key)
 	return NULL;
 }
 
-extern int 
+int 
 ct_bintree_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 {
 	int cval;

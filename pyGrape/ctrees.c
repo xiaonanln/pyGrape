@@ -8,7 +8,7 @@
 #define XDATA(node)	((node)->xdata)
 #define RED(node)	((node)->xdata)
 
-void initctrees()
+void initctrees(void)
 {
 }
 
@@ -129,6 +129,8 @@ int
 ct_bintree_remove(node_t **rootaddr, PyObject *key)
 {
 	int cmp_res;
+	node_t *tmp;
+
 	while (1) {
 		node_t *root = *rootaddr;
 		if (root == NULL) {
@@ -147,9 +149,17 @@ ct_bintree_remove(node_t **rootaddr, PyObject *key)
 			if (LEFT(root) == NULL) {
 				// replace the root with the right subtree
 				*rootaddr = RIGHT(root);
+				ct_delete_node(root);
 			} else if (RIGHT(root) == NULL) {
 				// replace the root with the left subtree
 				*rootaddr = LEFT(root);
+				ct_delete_node(root);
+			} else {
+				// both left and right sub-tree is non-null, replace by smallest key in right sub-tree
+				node_t *leftmost = RIGHT(root); // assert leftmost != NULL
+				while ((tmp = LEFT(leftmost)) != NULL) {
+					leftmost = tmp; 
+				}
 			}
 		}
 	}

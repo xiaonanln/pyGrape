@@ -11,6 +11,9 @@ cdef class _BaseTree:
 
 	def __dealloc__(self):
 		pass
-
-
+		
+	def insert(self, key, value):
+		cdef int ret = ct_bintree_insert(&self.root, key, value)
+		if ret < 0:
+			raise MemoryError( (key, value) )
 

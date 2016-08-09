@@ -34,8 +34,8 @@ ct_delete_node(node_t *node)
 	if (node != NULL) {
 		Py_XDECREF(KEY(node));
 		Py_XDECREF(KEY(node));
-		LEFT(node) = NULL;
-		RIGHT(node) = NULL;
+		//LEFT(node) = NULL;
+		//RIGHT(node) = NULL;
 		PyMem_Free(node);
 	}
 }
@@ -99,7 +99,8 @@ ct_find_node(node_t *root, PyObject *key)
 	return NULL;
 }
 
-int ct_bintree_insert(node_t **rootaddr, PyObject *key, PyObject *value)
+extern int 
+ct_bintree_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 {
 	int cval;
 	while (1) {
@@ -140,26 +141,33 @@ ct_bintree_remove(node_t **rootaddr, PyObject *key)
 
 		cmp_res = ct_compare(key, KEY(root));
 		if (cmp_res < 0) {
-			// use left tree
+			// use left sub-tree
 			rootaddr = &LEFT(root);
 		} else if (cmp_res > 0) {
+			// use right sub-tree
 			rootaddr = &RIGHT(root);
 		} else {
 			// key found, remove the root node
 			if (LEFT(root) == NULL) {
-				// replace the root with the right subtree
+				// replace the root with the right sub-tree
 				*rootaddr = RIGHT(root);
 				ct_delete_node(root);
 			} else if (RIGHT(root) == NULL) {
-				// replace the root with the left subtree
+				// replace the root with the left sub-tree
 				*rootaddr = LEFT(root);
 				ct_delete_node(root);
 			} else {
 				// both left and right sub-tree is non-null, replace by smallest key in right sub-tree
+				node_t **pleftmost = &RIGHT(root); 
 				node_t *leftmost = RIGHT(root); // assert leftmost != NULL
 				while ((tmp = LEFT(leftmost)) != NULL) {
+					pleftmost = &LEFT(leftmost); 
 					leftmost = tmp; 
 				}
+				// found the leftmost node, copy its data to the root, then remove the left most node
+				KEY(root) = KEY(leftmost);
+				VALUE(root) = VALUE(leftmost);
+				*pleftmost = RIGHT(leftmost);
 			}
 		}
 	}

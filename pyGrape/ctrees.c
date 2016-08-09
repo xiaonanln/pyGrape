@@ -31,13 +31,13 @@ ct_new_node(PyObject *key, PyObject *value, int xdata)
 static void
 ct_delete_node(node_t *node)
 {
-	if (node != NULL) {
+	// if (node != NULL) {
 		Py_XDECREF(KEY(node));
-		Py_XDECREF(KEY(node));
+		Py_XDECREF(VALUE(node));
 		//LEFT(node) = NULL;
 		//RIGHT(node) = NULL;
 		PyMem_Free(node);
-	}
+	// }
 }
 
 void
@@ -45,16 +45,12 @@ ct_delete_tree(node_t *root)
 {
 	if (root == NULL) return ;
 
-	if (LEFT(root) != NULL) {
-		ct_delete_tree(LEFT(root));
-	}
-	if (RIGHT(root) != NULL) {
-		ct_delete_tree(RIGHT(root));
-	}
+	ct_delete_tree(LEFT(root));
+	ct_delete_tree(RIGHT(root));
+
 	ct_delete_node(root);
 }
 
-#if 0
 static void
 ct_swap_data(node_t *node1, node_t *node2)
 {
@@ -67,7 +63,6 @@ ct_swap_data(node_t *node1, node_t *node2)
 	VALUE(node1) = VALUE(node2);
 	VALUE(node2) = tmp;
 }
-#endif
 
 int
 ct_compare(PyObject *key1, PyObject *key2)
@@ -120,7 +115,6 @@ ct_bintree_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 			rootaddr = &RIGHT(root);
 		} else {
 			/* key exists, replace value object? no! */
-			PyErr_SetString(PyExc_ValueError, "duplicate key");
 			return 0;
 		}
 	}
@@ -165,11 +159,51 @@ ct_bintree_remove(node_t **rootaddr, PyObject *key)
 					leftmost = tmp; 
 				}
 				// found the leftmost node, copy its data to the root, then remove the left most node
-				KEY(root) = KEY(leftmost);
-				VALUE(root) = VALUE(leftmost);
+				ct_swap_data(root, leftmost); 
 				*pleftmost = RIGHT(leftmost);
+				ct_delete_node(leftmost); 
 			}
+			return 1;
 		}
 	}
+}
+
+PyObject *ct_get_value(node_t *node)
+{
+	return VALUE(node);
+}
+
+PyObject *ct_get_key(node_t *node) 
+{
+	return KEY(node);
+}
+
+node_t *ct_min_node(node_t *root) 
+{
+	node_t *left; 
+	while ((left = LEFT(root)) != NULL) {
+		root = left; 
+	}
+	return root; 
+}
+
+node_t *ct_max_node(node_t *root) 
+{
+	node_t *left; 
+	while ((left = RIGHT(root)) != NULL) {
+		root = left; 
+	}
+	return root; 
+}
+
+
+node_t *ct_succ_node(node_t *node)
+{
+	return node; 
+}
+
+node_t *ct_prev_node(node_t *node)
+{
+	return node; 
 }
 

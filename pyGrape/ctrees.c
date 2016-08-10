@@ -181,6 +181,8 @@ PyObject *ct_get_key(node_t *node)
 node_t *ct_min_node(node_t *root) 
 {
 	node_t *left; 
+	if (root == NULL) return NULL; 
+
 	while ((left = LEFT(root)) != NULL) {
 		root = left; 
 	}
@@ -190,20 +192,91 @@ node_t *ct_min_node(node_t *root)
 node_t *ct_max_node(node_t *root) 
 {
 	node_t *left; 
+	if (root == NULL) return NULL; 
+	
 	while ((left = RIGHT(root)) != NULL) {
 		root = left; 
 	}
 	return root; 
 }
 
-
-node_t *ct_succ_node(node_t *node)
+extern node_t *
+ct_succ_node_slow(node_t *root, PyObject *key)
 {
-	return node; 
+	node_t *succ = NULL;
+	node_t *node = root;
+	int cval;
+
+	while (node != NULL) {
+		cval = ct_compare(key, KEY(node));
+		if (cval == 0)
+			break;
+		else if (cval < 0) {
+			if ((succ == NULL) ||
+				(ct_compare(KEY(node), KEY(succ)) < 0))
+				succ = node;
+			node = LEFT(node);
+		} else
+			node = RIGHT(node);
+	}
+	if (node == NULL)
+		return NULL;
+	/* found node of key */
+	if (RIGHT(node) != NULL) {
+		/* find smallest node of right subtree */
+		node = RIGHT(node);
+		while (LEFT(node) != NULL)
+			node = LEFT(node);
+		if (succ == NULL)
+			succ = node;
+		else if (ct_compare(KEY(node), KEY(succ)) < 0)
+			succ = node;
+	}
+	return succ;
 }
 
-node_t *ct_prev_node(node_t *node)
+extern node_t *
+ct_prev_node_slow(node_t *root, PyObject *key)
 {
-	return node; 
+	node_t *prev = NULL;
+	node_t *node = root;
+	int cval;
+
+	while (node != NULL) {
+		cval = ct_compare(key, KEY(node));
+		if (cval == 0)
+			break;
+		else if (cval < 0)
+			node = LEFT(node);
+		else {
+			if ((prev == NULL) || (ct_compare(KEY(node), KEY(prev)) > 0))
+				prev = node;
+			node = RIGHT(node);
+		}
+	}
+	if (node == NULL) /* stay at dead end (None) */
+		return NULL;
+	/* found node of key */
+	if (LEFT(node) != NULL) {
+		/* find biggest node of left subtree */
+		node = LEFT(node);
+		while (RIGHT(node) != NULL)
+			node = RIGHT(node);
+		if (prev == NULL)
+			prev = node;
+		else if (ct_compare(KEY(node), KEY(prev)) > 0)
+			prev = node;
+	}
+	return prev;
+}
+
+node_t *ct_succ_node(node_t *root, node_t *node)
+{
+	return ct_succ_node_slow(root, KEY(node));
+}
+
+node_t *ct_prev_node(node_t *root, node_t *node)
+{
+	return ct_prev_node_slow(root, KEY(node));
 }
 

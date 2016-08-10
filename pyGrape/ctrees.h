@@ -31,8 +31,8 @@ int ct_bintree_remove(node_t **root, PyObject *key);
 node_t *ct_min_node(node_t *root);
 node_t *ct_max_node(node_t *root);
 
-node_t *ct_succ_node(node_t *node);
-node_t *ct_prev_node(node_t *node);
+node_t *ct_succ_node(node_t *root, node_t *node);
+node_t *ct_prev_node(node_t *root, node_t *node);
 
 #endif // __CTREES_H
 

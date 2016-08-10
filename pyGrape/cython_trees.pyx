@@ -40,19 +40,39 @@ cdef class BinaryTree:
 	cpdef TreeNode findMin(self):
 		cdef node_t *node = ct_min_node(self.root)
 		if node == NULL:
-			raise KeyError('__min__')
+			return None
 
 		return TreeNode(<long>node)
 
 	cpdef TreeNode findMax(self):
 		cdef node_t *node = ct_max_node(self.root)
 		if node == NULL:
-			raise KeyError('__min__')
+			return None 
 
 		return TreeNode(<long>node)
 
+	cpdef TreeNode getSucc(self, TreeNode node):
+		cdef node_t *succNode = ct_succ_node(self.root, node.node)
+		print 'succNode', <long>succNode
+		if succNode == NULL:
+			return None 
+
+		return TreeNode(<long>succNode)
+
+	cpdef TreeNode getPrev(self, TreeNode node):
+		cdef node_t *prevNode = ct_prev_node(self.root, node.node)
+		if prevNode == NULL:
+			return None 
+
+		return TreeNode(<long>prevNode)
+
 	def __len__(self):
 		return self.len 
+
+	cpdef validate(self):
+		cdef int valid = ct_validate(self.root)
+		if not valid:
+			raise AssertionError('invalid tree')
 
 cdef class TreeNode:
 	cdef node_t *node
@@ -68,3 +88,6 @@ cdef class TreeNode:
 	property key:
 		def __get__(self):
 			return ct_get_key(self.node)
+
+	def __str__(self):
+		return str((self.key, self.value))

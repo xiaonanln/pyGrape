@@ -15,7 +15,7 @@ class BinaryTreeTest(unittest.TestCase):
 
 	def testLen(self): 
 		bt = BinaryTree()
-		N = 10000
+		N = 1000
 		expectedLen = 0
 		for i in xrange(N):
 			n = random.randint(1, N//100)
@@ -40,9 +40,40 @@ class BinaryTreeTest(unittest.TestCase):
 
 	def testInsert(self):
 		bt = BinaryTree()
-		for i in xrange(10000):
+		for i in xrange(1000):
 			bt.insert(i, i)
 			self.assertEqual(len(bt), i+1)
+
+	def testSuccNode(self):
+		N = 1000
+		t = self.newRandomTree(4)
+		node = t.findMin()
+		nodeCount = 0
+		while node is not None:
+			nodeCount += 1
+			print 'getSucc'
+			node = t.getSucc(node)
+			print 'getSucc end'
+			print 'succ', node
+
+		self.assertEqual(nodeCount, len(t))
+
+	def newRandomTree(self, n):
+		keys = set()
+		t = BinaryTree()
+		for i in xrange(n):
+			key  = random.randint(1, n*100)
+			while key in keys:
+				key  = random.randint(1, n*100)
+
+			keys.add(key)
+			print 'insert', key, i
+			t.insert(key, i)
+
+		self.assertEqual(len(t), n)
+		t.validate()
+		return t 
+
 
 if __name__ =='__main__': 
 	unittest.main()

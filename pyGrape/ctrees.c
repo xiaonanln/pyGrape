@@ -21,6 +21,7 @@ ct_new_node(PyObject *key, PyObject *value, int xdata)
 		Py_INCREF(key);
 		VALUE(new_node) = value;
 		Py_INCREF(value);
+
 		LEFT(new_node) = NULL;
 		RIGHT(new_node) = NULL;
 		XDATA(new_node) = xdata;
@@ -191,51 +192,52 @@ node_t *ct_min_node(node_t *root)
 
 node_t *ct_max_node(node_t *root) 
 {
-	node_t *left; 
+	node_t *right; 
 	if (root == NULL) return NULL; 
 	
-	while ((left = RIGHT(root)) != NULL) {
-		root = left; 
+	while ((right = RIGHT(root)) != NULL) {
+		root = right; 
 	}
 	return root; 
 }
 
-extern node_t *
+static node_t *
 ct_succ_node_slow(node_t *root, PyObject *key)
 {
-	node_t *succ = NULL;
+	node_t *parent = NULL;
 	node_t *node = root;
 	int cval;
 
 	while (node != NULL) {
 		cval = ct_compare(key, KEY(node));
-		if (cval == 0)
-			break;
-		else if (cval < 0) {
-			if ((succ == NULL) ||
-				(ct_compare(KEY(node), KEY(succ)) < 0))
-				succ = node;
+		if (cval == 0) {
+			break;	
+		} else if (cval < 0) {
+			parent = node; 
 			node = LEFT(node);
-		} else
+		} else {
+			parent = node; 
 			node = RIGHT(node);
+		}
 	}
+
 	if (node == NULL)
 		return NULL;
+
 	/* found node of key */
 	if (RIGHT(node) != NULL) {
 		/* find smallest node of right subtree */
 		node = RIGHT(node);
-		while (LEFT(node) != NULL)
+		while (LEFT(node) != NULL) {
 			node = LEFT(node);
-		if (succ == NULL)
-			succ = node;
-		else if (ct_compare(KEY(node), KEY(succ)) < 0)
-			succ = node;
+		}
+		return node; 
+	} else {
+		return parent;
 	}
-	return succ;
 }
 
-extern node_t *
+static node_t *
 ct_prev_node_slow(node_t *root, PyObject *key)
 {
 	node_t *prev = NULL;
@@ -280,3 +282,29 @@ node_t *ct_prev_node(node_t *root, node_t *node)
 	return ct_prev_node_slow(root, KEY(node));
 }
 
+static int ct_validate_range(node_t *root, PyObject *minkey, PyObject *maxkey)
+{
+	PyObject *key; 
+	if (root == NULL) return 1; 
+	key = KEY(root); 
+	if (minkey != NULL) {
+		if (ct_compare(key, minkey) <= 0) {
+			return 0;
+		}
+	}
+	if (maxkey != NULL) {
+		if (ct_compare(key, maxkey) >= 0) {
+			return 0;
+		}
+	}
+	return 1; 
+}
+
+
+int ct_validate(node_t *root)
+{
+	PyObject *key;
+	if (root == NULL) return 1; 
+	key = KEY(root); 
+	return ct_validate_range(LEFT(root), NULL, key) && ct_validate_range(RIGHT(root), key, NULL);
+}

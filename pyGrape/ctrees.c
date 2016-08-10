@@ -204,7 +204,7 @@ node_t *ct_max_node(node_t *root)
 static node_t *
 ct_succ_node_slow(node_t *root, PyObject *key)
 {
-	node_t *parent = NULL;
+	node_t *succ = NULL;
 	node_t *node = root;
 	int cval;
 
@@ -213,16 +213,14 @@ ct_succ_node_slow(node_t *root, PyObject *key)
 		if (cval == 0) {
 			break;	
 		} else if (cval < 0) {
-			parent = node; 
+			succ = node; 
 			node = LEFT(node);
 		} else {
-			parent = node; 
 			node = RIGHT(node);
 		}
 	}
 
-	if (node == NULL)
-		return NULL;
+	assert(node != NULL);
 
 	/* found node of key */
 	if (RIGHT(node) != NULL) {
@@ -233,7 +231,7 @@ ct_succ_node_slow(node_t *root, PyObject *key)
 		}
 		return node; 
 	} else {
-		return parent;
+		return succ;
 	}
 }
 

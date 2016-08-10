@@ -6,6 +6,9 @@ buildlib:
 test:
 	python testPyGrape.py
 
+testct:
+	python testBinaryTrees.py
+
 clean:
 	python buildPyGrape.py clean
 

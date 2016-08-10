@@ -35,8 +35,8 @@ ct_delete_node(node_t *node)
 	// if (node != NULL) {
 		Py_XDECREF(KEY(node));
 		Py_XDECREF(VALUE(node));
-		//LEFT(node) = NULL;
-		//RIGHT(node) = NULL;
+		// LEFT(node) = NULL;
+		// RIGHT(node) = NULL;
 		PyMem_Free(node);
 	// }
 }
@@ -225,14 +225,12 @@ ct_succ_node_slow(node_t *root, PyObject *key)
 	/* found node of key */
 	if (RIGHT(node) != NULL) {
 		/* find smallest node of right subtree */
-		node = RIGHT(node);
-		while (LEFT(node) != NULL) {
-			node = LEFT(node);
+		succ = RIGHT(node);
+		while (LEFT(succ) != NULL) {
+			succ = LEFT(succ);
 		}
-		return node; 
-	} else {
-		return succ;
 	}
+	return succ; 
 }
 
 static node_t *

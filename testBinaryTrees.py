@@ -1,5 +1,7 @@
 import unittest
 import random
+import sys
+import time
 
 from pyGrape.cython_trees import BinaryTree
 
@@ -46,15 +48,17 @@ class BinaryTreeTest(unittest.TestCase):
 
 	def testSuccNode(self):
 		N = 1000
-		t = self.newRandomTree(4)
+		t = self.newRandomTree(5)
 		node = t.findMin()
 		nodeCount = 0
 		while node is not None:
 			nodeCount += 1
-			print 'getSucc'
+			print >>sys.stderr, 'getSucc'
 			node = t.getSucc(node)
-			print 'getSucc end'
-			print 'succ', node
+			print >>sys.stderr, 'getSucc end'
+			print >>sys.stderr, 'succ', node is None 
+			if node is not None:
+				print >>sys.stderr, node.key
 
 		self.assertEqual(nodeCount, len(t))
 
@@ -67,7 +71,7 @@ class BinaryTreeTest(unittest.TestCase):
 				key  = random.randint(1, n*100)
 
 			keys.add(key)
-			print 'insert', key, i
+			print >>sys.stderr, 'insert', key, i
 			t.insert(key, i)
 
 		self.assertEqual(len(t), n)

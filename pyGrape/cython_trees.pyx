@@ -1,6 +1,6 @@
 
 from ctrees cimport *
-
+import sys
 
 
 cdef class BinaryTree:
@@ -53,7 +53,7 @@ cdef class BinaryTree:
 
 	cpdef TreeNode getSucc(self, TreeNode node):
 		cdef node_t *succNode = ct_succ_node(self.root, node.node)
-		print 'succNode', <long>succNode
+		print >>sys.stderr, 'succNode', <long>succNode
 		if succNode == NULL:
 			return None 
 
@@ -88,6 +88,10 @@ cdef class TreeNode:
 	property key:
 		def __get__(self):
 			return ct_get_key(self.node)
+
+	property pkey:
+		def __get__(self):
+			return <long>self.node.key
 
 	def __str__(self):
 		return str((self.key, self.value))

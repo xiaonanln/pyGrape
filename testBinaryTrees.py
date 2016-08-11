@@ -2,6 +2,8 @@ import unittest
 import random
 import sys
 import time
+import cProfile
+import os
 
 from pyGrape.cython_trees import BinaryTree
 
@@ -47,19 +49,27 @@ class BinaryTreeTest(unittest.TestCase):
 			self.assertEqual(len(bt), i+1)
 
 	def testSuccNode(self):
-		N = 10000
+		N = 200000
 		t = self.newRandomTree(N)
 
-		node = t.findMin()
-		nodeCount = 0
-		while node:
-			nodeCount += 1
-			# print >>sys.stderr, 'getSucc'
-			node = t.getSucc(node)
-			# print >>sys.stderr, 'getSucc end'
-			# print >>sys.stderr, 'succ', node is None, node
-			if node:
-				print >>sys.stderr, 'node', node, 'key', t.getKey(node), t.getValue(node)
+		startTravelTime = time.time()
+
+		for i in  xrange(10):
+			node = t.findMin()
+			nodeCount = 0
+			lastkey, lastval = node.item
+
+			while node:
+				nodeCount += 1
+				# print >>sys.stderr, 'getSucc'
+				if not node.moveSucc():
+					break 
+
+				key, val = node.item
+				assert key > lastkey, (key, lastkey)
+				lastkey, lastval = key, val
+
+		print 'travel tree takes %ss' % (time.time() - startTravelTime)
 
 		self.assertEqual(nodeCount, len(t))
 

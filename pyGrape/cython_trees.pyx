@@ -35,45 +35,35 @@ cdef class BinaryTree:
 		if node == NULL:
 			raise KeyError(key)
 
-		return TreeNode(<long>node)
+		return TreeNode(self, <long>node)
 
-	cpdef long findMin(self):
+	cpdef TreeNode findMin(self):
 		cdef node_t *node = ct_min_node(self.root)
 		if node == NULL:
-			return 0;
+			return None
 
-		return <long>node;
+		return TreeNode(self, <long>node)
 
 	cpdef TreeNode findMax(self):
 		cdef node_t *node = ct_max_node(self.root)
 		if node == NULL:
 			return None
 
-		return TreeNode(<long>node)
+		return TreeNode(self, <long>node)
 
-	cpdef long getSucc(self, long node):
-		cdef node_t *succNode = ct_succ_node(self.root, <node_t *>node)
-		if succNode == NULL:
-			return 0
+	# cpdef TreeNode getSucc(self, TreeNode node):
+	# 	cdef node_t *succNode = ct_succ_node(self.root, node.node)
+	# 	if succNode == NULL:
+	# 		return None
 
-		return <long>succNode
+	# 	return TreeNode(self, <long>succNode)
 
-	cpdef TreeNode getPrev(self, TreeNode node):
-		cdef node_t *prevNode = ct_prev_node(self.root, node.node)
-		if prevNode == NULL:
-			return None
+	# cpdef TreeNode getPrev(self, TreeNode node):
+	# 	cdef node_t *prevNode = ct_prev_node(self.root, node.node)
+	# 	if prevNode == NULL:
+	# 		return None
 
-		return TreeNode(<long>prevNode)
-
-	cpdef object getKey(self, long nodeaddr):
-		cdef node_t *node = <node_t *>nodeaddr
-		cdef object key = ct_get_key(node)
-		return key
-
-	cpdef object getValue(self, long nodeaddr):
-		cdef node_t *node = <node_t *>nodeaddr
-		cdef object value = ct_get_value(node)
-		return value
+	# 	return TreeNode(self, <long>prevNode)
 
 	def __len__(self):
 		return self.len
@@ -84,9 +74,11 @@ cdef class BinaryTree:
 			raise AssertionError('invalid tree')
 
 cdef class TreeNode:
+	cdef BinaryTree owner
 	cdef node_t *node
 
-	def __cinit__(self, _node):
+	def __cinit__(self, BinaryTree tree, _node):
+		self.owner = tree
 		cdef node_t *node = <node_t *><long>_node;
 		self.node = node
 
@@ -98,9 +90,26 @@ cdef class TreeNode:
 		def __get__(self):
 			return ct_get_key(self.node)
 
-	property pkey:
+	property item:
 		def __get__(self):
-			return <long>self.node.key
+			cdef node_t *node = self.node
+			return (ct_get_key(node), ct_get_value(node))
+
+	cpdef bint moveSucc(self):
+		cdef node_t *node = ct_succ_node(self.owner.root, self.node)
+		if node != NULL:
+			self.node = node
+			return True 
+		else:
+			return False 
+
+	cpdef bint movePrev(self):
+		cdef node_t *node = ct_prev_node(self.owner.root, self.node)
+		if node != NULL:
+			self.node = node
+			return True 
+		else:
+			return False 
 
 	def __str__(self):
 		return str((self.key, self.value))

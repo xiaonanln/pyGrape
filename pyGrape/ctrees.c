@@ -1,16 +1,14 @@
 #include "ctrees.h"
 
+#define LEFT 		(0)
+#define RIGHT 		(1)
 #define KEY(node)	((node)->key)
 #define VALUE(node)	((node)->value)
-#define LEFT(node)	((node)->link[0])
-#define RIGHT(node)	((node)->link[1])
+#define LEFT_NODE(node)	((node)->link[0])
+#define RIGHT_NODE(node)	((node)->link[1])
 #define LINK(node, n)	((node)->link[(n)])
 #define XDATA(node)	((node)->xdata)
 #define RED(node)	((node)->xdata)
-
-void initctrees(void)
-{
-}
 
 static node_t *
 ct_new_node(PyObject *key, PyObject *value, int xdata)
@@ -18,12 +16,13 @@ ct_new_node(PyObject *key, PyObject *value, int xdata)
 	node_t *new_node = PyMem_Malloc(sizeof(node_t));
 	if (new_node != NULL) {
 		KEY(new_node) = key;
-		Py_INCREF(key);
+		Py_INCREF(key); 
+
 		VALUE(new_node) = value;
 		Py_INCREF(value);
 
-		LEFT(new_node) = NULL;
-		RIGHT(new_node) = NULL;
+		LEFT_NODE(new_node) = NULL;
+		RIGHT_NODE(new_node) = NULL;
 		XDATA(new_node) = xdata;
 	}
 	return new_node;
@@ -35,8 +34,8 @@ ct_delete_node(node_t *node)
 	// if (node != NULL) {
 		Py_XDECREF(KEY(node));
 		Py_XDECREF(VALUE(node));
-		// LEFT(node) = NULL;
-		// RIGHT(node) = NULL;
+		// LEFT_NODE(node) = NULL;
+		// RIGHT_NODE(node) = NULL;
 		PyMem_Free(node);
 	// }
 }
@@ -46,8 +45,8 @@ ct_delete_tree(node_t *root)
 {
 	if (root == NULL) return ;
 
-	ct_delete_tree(LEFT(root));
-	ct_delete_tree(RIGHT(root));
+	ct_delete_tree(LEFT_NODE(root));
+	ct_delete_tree(RIGHT_NODE(root));
 
 	ct_delete_node(root);
 }
@@ -59,25 +58,15 @@ ct_swap_data(node_t *node1, node_t *node2)
 	tmp = KEY(node1);
 	KEY(node1) = KEY(node2);
 	KEY(node2) = tmp;
-
 	tmp = VALUE(node1);
-	VALUE(node1) = VALUE(node2);
+	VALUE(node1) = VALUE(node2); 
 	VALUE(node2) = tmp;
 }
 
 int
 ct_compare(PyObject *key1, PyObject *key2)
 {
-	int res;
-	res = PyObject_RichCompareBool(key1, key2, Py_LT);
-	if (res > 0)
-		return -1;
-	else if (res < 0) {
-		PyErr_SetString(PyExc_TypeError, "invalid type for key");
-		return 0;
-	}
-
-	return PyObject_RichCompareBool(key1, key2, Py_GT);
+	return PyObject_Compare(key1, key2);
 }
 
 node_t *
@@ -111,15 +100,16 @@ ct_bintree_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 		cval = ct_compare(key, KEY(root));
 		if (cval < 0) {
 			// use left tree
-			rootaddr = &LEFT(root);
+			rootaddr = &LEFT_NODE(root);
 		} else if (cval > 0) {
-			rootaddr = &RIGHT(root);
+			rootaddr = &RIGHT_NODE(root);
 		} else {
 			/* key exists, replace value object? no! */
 			return 0;
 		}
 	}
 }
+
 
 int
 ct_bintree_remove(node_t **rootaddr, PyObject *key)
@@ -137,31 +127,31 @@ ct_bintree_remove(node_t **rootaddr, PyObject *key)
 		cmp_res = ct_compare(key, KEY(root));
 		if (cmp_res < 0) {
 			// use left sub-tree
-			rootaddr = &LEFT(root);
+			rootaddr = &LEFT_NODE(root);
 		} else if (cmp_res > 0) {
 			// use right sub-tree
-			rootaddr = &RIGHT(root);
+			rootaddr = &RIGHT_NODE(root);
 		} else {
 			// key found, remove the root node
-			if (LEFT(root) == NULL) {
+			if (LEFT_NODE(root) == NULL) {
 				// replace the root with the right sub-tree
-				*rootaddr = RIGHT(root);
+				*rootaddr = RIGHT_NODE(root);
 				ct_delete_node(root);
-			} else if (RIGHT(root) == NULL) {
+			} else if (RIGHT_NODE(root) == NULL) {
 				// replace the root with the left sub-tree
-				*rootaddr = LEFT(root);
+				*rootaddr = LEFT_NODE(root);
 				ct_delete_node(root);
 			} else {
 				// both left and right sub-tree is non-null, replace by smallest key in right sub-tree
-				node_t **pleftmost = &RIGHT(root); 
-				node_t *leftmost = RIGHT(root); // assert leftmost != NULL
-				while ((tmp = LEFT(leftmost)) != NULL) {
-					pleftmost = &LEFT(leftmost); 
+				node_t **pleftmost = &RIGHT_NODE(root); 
+				node_t *leftmost = RIGHT_NODE(root); // assert leftmost != NULL
+				while ((tmp = LEFT_NODE(leftmost)) != NULL) {
+					pleftmost = &LEFT_NODE(leftmost); 
 					leftmost = tmp; 
 				}
 				// found the leftmost node, copy its data to the root, then remove the left most node
 				ct_swap_data(root, leftmost); 
-				*pleftmost = RIGHT(leftmost);
+				*pleftmost = RIGHT_NODE(leftmost);
 				ct_delete_node(leftmost); 
 			}
 			return 1;
@@ -171,12 +161,16 @@ ct_bintree_remove(node_t **rootaddr, PyObject *key)
 
 PyObject *ct_get_value(node_t *node)
 {
-	return VALUE(node);
+	PyObject *val = VALUE(node);
+	Py_INCREF(val); 
+	return val;
 }
 
 PyObject *ct_get_key(node_t *node) 
 {
-	return KEY(node);
+	PyObject *key = KEY(node);
+	Py_INCREF(key); 
+	return key;
 }
 
 node_t *ct_min_node(node_t *root) 
@@ -184,7 +178,7 @@ node_t *ct_min_node(node_t *root)
 	node_t *left; 
 	if (root == NULL) return NULL; 
 
-	while ((left = LEFT(root)) != NULL) {
+	while ((left = LEFT_NODE(root)) != NULL) {
 		root = left; 
 	}
 	return root; 
@@ -195,7 +189,7 @@ node_t *ct_max_node(node_t *root)
 	node_t *right; 
 	if (root == NULL) return NULL; 
 	
-	while ((right = RIGHT(root)) != NULL) {
+	while ((right = RIGHT_NODE(root)) != NULL) {
 		root = right; 
 	}
 	return root; 
@@ -214,20 +208,20 @@ ct_succ_node_slow(node_t *root, PyObject *key)
 			break;	
 		} else if (cval < 0) {
 			succ = node; 
-			node = LEFT(node);
+			node = LEFT_NODE(node);
 		} else {
-			node = RIGHT(node);
+			node = RIGHT_NODE(node);
 		}
 	}
 
 	assert(node != NULL);
 
 	/* found node of key */
-	if (RIGHT(node) != NULL) {
+	if (RIGHT_NODE(node) != NULL) {
 		/* find smallest node of right subtree */
-		succ = RIGHT(node);
-		while (LEFT(succ) != NULL) {
-			succ = LEFT(succ);
+		succ = RIGHT_NODE(node);
+		while (LEFT_NODE(succ) != NULL) {
+			succ = LEFT_NODE(succ);
 		}
 	}
 	return succ; 
@@ -245,21 +239,21 @@ ct_prev_node_slow(node_t *root, PyObject *key)
 		if (cval == 0)
 			break;
 		else if (cval < 0)
-			node = LEFT(node);
+			node = LEFT_NODE(node);
 		else {
 			if ((prev == NULL) || (ct_compare(KEY(node), KEY(prev)) > 0))
 				prev = node;
-			node = RIGHT(node);
+			node = RIGHT_NODE(node);
 		}
 	}
 	if (node == NULL) /* stay at dead end (None) */
 		return NULL;
 	/* found node of key */
-	if (LEFT(node) != NULL) {
+	if (LEFT_NODE(node) != NULL) {
 		/* find biggest node of left subtree */
-		node = LEFT(node);
-		while (RIGHT(node) != NULL)
-			node = RIGHT(node);
+		node = LEFT_NODE(node);
+		while (RIGHT_NODE(node) != NULL)
+			node = RIGHT_NODE(node);
 		if (prev == NULL)
 			prev = node;
 		else if (ct_compare(KEY(node), KEY(prev)) > 0)
@@ -302,5 +296,5 @@ int ct_validate(node_t *root)
 	PyObject *key;
 	if (root == NULL) return 1; 
 	key = KEY(root); 
-	return ct_validate_range(LEFT(root), NULL, key) && ct_validate_range(RIGHT(root), key, NULL);
+	return ct_validate_range(LEFT_NODE(root), NULL, key) && ct_validate_range(RIGHT_NODE(root), key, NULL);
 }

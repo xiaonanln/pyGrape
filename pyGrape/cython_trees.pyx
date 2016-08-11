@@ -14,7 +14,7 @@ cdef class BinaryTree:
 	def __dealloc__(self):
 		ct_delete_tree(self.root)
 
-	cpdef insert(self, key, value):
+	cpdef insert(self, object key, object value):
 		cdef int ret = ct_bintree_insert(&self.root, key, value)
 		if ret < 0:
 			raise MemoryError()
@@ -23,14 +23,14 @@ cdef class BinaryTree:
 
 		self.len += 1
 
-	cpdef remove(self, key):
+	cpdef remove(self, object key):
 		cdef int ret = ct_bintree_remove(&self.root, key)
 		if ret == 0:
 			raise KeyError(key)
 		else:
 			self.len -= 1
 
-	cpdef TreeNode find(self, key):
+	cpdef TreeNode find(self, object key):
 		cdef node_t *node = ct_find_node(self.root, key)
 		if node == NULL:
 			raise KeyError(key)
@@ -53,7 +53,6 @@ cdef class BinaryTree:
 
 	cpdef long getSucc(self, long node):
 		cdef node_t *succNode = ct_succ_node(self.root, <node_t *>node)
-		print >>sys.stderr, 'succNode', <long>succNode
 		if succNode == NULL:
 			return 0
 
@@ -66,9 +65,15 @@ cdef class BinaryTree:
 
 		return TreeNode(<long>prevNode)
 
-    cpdef getKey(self, long nodeaddr):
-        cdef node_t *node = <node_t *>nodeaddr
-        return ct_get_key(node)
+	cpdef object getKey(self, long nodeaddr):
+		cdef node_t *node = <node_t *>nodeaddr
+		cdef object key = ct_get_key(node)
+		return key
+
+	cpdef object getValue(self, long nodeaddr):
+		cdef node_t *node = <node_t *>nodeaddr
+		cdef object value = ct_get_value(node)
+		return value
 
 	def __len__(self):
 		return self.len
@@ -82,7 +87,6 @@ cdef class TreeNode:
 	cdef node_t *node
 
 	def __cinit__(self, _node):
-		print 'TreeNode', type(_node), _node
 		cdef node_t *node = <node_t *><long>_node;
 		self.node = node
 

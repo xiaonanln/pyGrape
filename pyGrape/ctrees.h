@@ -17,8 +17,6 @@ struct tree_node {
 	int xdata;
 };
 
-typedef node_t *nodeptr;
-
 PyObject *ct_get_key(node_t *node);
 PyObject *ct_get_value(node_t *node); 
 

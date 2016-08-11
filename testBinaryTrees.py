@@ -47,19 +47,19 @@ class BinaryTreeTest(unittest.TestCase):
 			self.assertEqual(len(bt), i+1)
 
 	def testSuccNode(self):
-		N = 1000
-		t = self.newRandomTree(4)
+		N = 10000
+		t = self.newRandomTree(N)
 
 		node = t.findMin()
 		nodeCount = 0
-		while node is not None:
+		while node:
 			nodeCount += 1
-			print >>sys.stderr, 'getSucc'
+			# print >>sys.stderr, 'getSucc'
 			node = t.getSucc(node)
-			print >>sys.stderr, 'getSucc end'
-			print >>sys.stderr, 'succ', node is None
-			if node is not None:
-				print >>sys.stderr, node.key
+			# print >>sys.stderr, 'getSucc end'
+			# print >>sys.stderr, 'succ', node is None, node
+			if node:
+				print >>sys.stderr, 'node', node, 'key', t.getKey(node), t.getValue(node)
 
 		self.assertEqual(nodeCount, len(t))
 
@@ -72,7 +72,6 @@ class BinaryTreeTest(unittest.TestCase):
 				key  = random.randint(1, n*100)
 
 			keys.add(key)
-			print >>sys.stderr, 'insert', key, i
 			t.insert(key, i)
 
 		self.assertEqual(len(t), n)

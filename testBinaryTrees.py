@@ -5,33 +5,33 @@ import time
 
 from pyGrape.cython_trees import BinaryTree
 
-class BinaryTreeTest(unittest.TestCase): 
+class BinaryTreeTest(unittest.TestCase):
 	def __init__(self, *args):
 		super(BinaryTreeTest, self).__init__(*args)
 
-	def setUp(self): 
+	def setUp(self):
 		pass
 
-	def tearDown(self): 
+	def tearDown(self):
 		pass
 
-	def testLen(self): 
+	def testLen(self):
 		bt = BinaryTree()
 		N = 1000
 		expectedLen = 0
 		for i in xrange(N):
 			n = random.randint(1, N//100)
-			try: 
+			try:
 				bt.insert(n, i)
 				expectedLen += 1
 			except KeyError:
-				pass 
+				pass
 
 			self.assertEqual(len(bt), expectedLen)
 
 		for i in xrange(N):
 			n = random.randint(1, N//100)
-			try: 
+			try:
 				# print 'remove',n
 				bt.remove(n)
 				expectedLen -= 1
@@ -48,7 +48,8 @@ class BinaryTreeTest(unittest.TestCase):
 
 	def testSuccNode(self):
 		N = 1000
-		t = self.newRandomTree(5)
+		t = self.newRandomTree(4)
+
 		node = t.findMin()
 		nodeCount = 0
 		while node is not None:
@@ -56,7 +57,7 @@ class BinaryTreeTest(unittest.TestCase):
 			print >>sys.stderr, 'getSucc'
 			node = t.getSucc(node)
 			print >>sys.stderr, 'getSucc end'
-			print >>sys.stderr, 'succ', node is None 
+			print >>sys.stderr, 'succ', node is None
 			if node is not None:
 				print >>sys.stderr, node.key
 
@@ -76,8 +77,8 @@ class BinaryTreeTest(unittest.TestCase):
 
 		self.assertEqual(len(t), n)
 		t.validate()
-		return t 
+		return t
 
 
-if __name__ =='__main__': 
+if __name__ =='__main__':
 	unittest.main()

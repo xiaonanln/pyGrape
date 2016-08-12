@@ -84,32 +84,32 @@ cdef class TreeNode:
 
 	property value:
 		def __get__(self):
-			return ct_get_value(self.node)
+			return <object>self.node.value
 
 	property key:
 		def __get__(self):
-			return ct_get_key(self.node)
+			return <object>(self.node.key)
 
 	property item:
 		def __get__(self):
 			cdef node_t *node = self.node
-			return (ct_get_key(node), ct_get_value(node))
+			return (<object>node.key, <object>node.value)
 
 	cpdef bint moveSucc(self):
 		cdef node_t *node = ct_succ_node(self.owner.root, self.node)
 		if node != NULL:
 			self.node = node
-			return True 
+			return True
 		else:
-			return False 
+			return False
 
 	cpdef bint movePrev(self):
 		cdef node_t *node = ct_prev_node(self.owner.root, self.node)
 		if node != NULL:
 			self.node = node
-			return True 
+			return True
 		else:
-			return False 
+			return False
 
 	def __str__(self):
 		return str((self.key, self.value))

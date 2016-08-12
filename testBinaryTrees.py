@@ -57,15 +57,15 @@ class BinaryTreeTest(unittest.TestCase):
 		for i in  xrange(10):
 			node = t.findMin()
 			nodeCount = 0
-			lastkey, lastval = node.item
+			lastkey, lastval = node.key, node.value
 
 			while node:
 				nodeCount += 1
 				# print >>sys.stderr, 'getSucc'
 				if not node.moveSucc():
-					break 
+					break
 
-				key, val = node.item
+				key, val = node.key, node.value
 				assert key > lastkey, (key, lastkey)
 				lastkey, lastval = key, val
 

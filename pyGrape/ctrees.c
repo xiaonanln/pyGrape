@@ -22,14 +22,14 @@ ct_new_node(node_t *parent, PyObject *key, PyObject *value, int xdata)
 
 	if (new_node != NULL) {
 		KEY(new_node) = key;
-		Py_INCREF(key); 
+		Py_INCREF(key);
 
 		VALUE(new_node) = value;
 		Py_INCREF(value);
 
 		LEFT_NODE(new_node) = NULL;
 		RIGHT_NODE(new_node) = NULL;
-		PARENT_NODE(new_node) = parent; 
+		PARENT_NODE(new_node) = parent;
 		XDATA(new_node) = xdata;
 	}
 	return new_node;
@@ -62,7 +62,7 @@ ct_swap_data(node_t *node1, node_t *node2)
 	KEY(node1) = KEY(node2);
 	KEY(node2) = tmp;
 	tmp = VALUE(node1);
-	VALUE(node1) = VALUE(node2); 
+	VALUE(node1) = VALUE(node2);
 	VALUE(node2) = tmp;
 }
 
@@ -81,11 +81,11 @@ ct_find_node(node_t *root, PyObject *key)
 	return NULL;
 }
 
-int 
+int
 ct_bintree_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 {
 	int cval;
-	node_t *parent = NULL; 
+	node_t *parent = NULL;
 
 	while (1) {
 		node_t *root = *rootaddr;
@@ -106,7 +106,7 @@ ct_bintree_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 			/* key exists, replace value object? no! */
 			return 0;
 		}
-		parent = root; 
+		parent = root;
 	}
 }
 
@@ -143,56 +143,42 @@ ct_bintree_remove(node_t **rootaddr, PyObject *key)
 				ct_delete_node(root);
 			} else {
 				// both left and right sub-tree is non-null, replace by smallest key in right sub-tree
-				node_t **pleftmost = &RIGHT_NODE(root); 
+				node_t **pleftmost = &RIGHT_NODE(root);
 				node_t *leftmost = RIGHT_NODE(root); // assert leftmost != NULL
 				while ((tmp = LEFT_NODE(leftmost)) != NULL) {
-					pleftmost = &LEFT_NODE(leftmost); 
-					leftmost = tmp; 
+					pleftmost = &LEFT_NODE(leftmost);
+					leftmost = tmp;
 				}
 				// found the leftmost node, copy its data to the root, then remove the left most node
-				ct_swap_data(root, leftmost); 
+				ct_swap_data(root, leftmost);
 				*pleftmost = RIGHT_NODE(leftmost);
-				ct_delete_node(leftmost); 
+				ct_delete_node(leftmost);
 			}
 			return 1;
 		}
 	}
 }
 
-PyObject *ct_get_value(node_t *node)
+node_t *ct_min_node(node_t *root)
 {
-	PyObject *val = VALUE(node);
-	Py_INCREF(val); 
-	return val;
-}
-
-PyObject *ct_get_key(node_t *node) 
-{
-	PyObject *key = KEY(node);
-	Py_INCREF(key); 
-	return key;
-}
-
-node_t *ct_min_node(node_t *root) 
-{
-	node_t *left; 
-	if (root == NULL) return NULL; 
+	node_t *left;
+	if (root == NULL) return NULL;
 
 	while ((left = LEFT_NODE(root)) != NULL) {
-		root = left; 
+		root = left;
 	}
-	return root; 
+	return root;
 }
 
-node_t *ct_max_node(node_t *root) 
+node_t *ct_max_node(node_t *root)
 {
-	node_t *right; 
-	if (root == NULL) return NULL; 
-	
+	node_t *right;
+	if (root == NULL) return NULL;
+
 	while ((right = RIGHT_NODE(root)) != NULL) {
-		root = right; 
+		root = right;
 	}
-	return root; 
+	return root;
 }
 
 static node_t *
@@ -248,11 +234,11 @@ node_t *ct_succ_node(node_t *root, node_t *node)
 				if (parent == NULL) {
 					return NULL;
 				} else if (RIGHT_NODE(parent) == node) {
-					node = parent; 
+					node = parent;
 					parent = PARENT_NODE(node);
 				} else {
-					assert(LEFT_NODE(parent) == node); 
-					return parent; 
+					assert(LEFT_NODE(parent) == node);
+					return parent;
 				}
 		}
 	}
@@ -265,13 +251,13 @@ node_t *ct_prev_node(node_t *root, node_t *node)
 
 static int ct_validate_range(node_t *root, PyObject *minkey, PyObject *maxkey)
 {
-	PyObject *key; 
-	if (root == NULL) return 1; 
+	PyObject *key;
+	if (root == NULL) return 1;
 
-	assert(LEFT_NODE(root) == NULL || PARENT_NODE(LEFT_NODE(root)) == root ); 
-	assert(RIGHT_NODE(root) == NULL || PARENT_NODE(RIGHT_NODE(root)) == root ); 
+	assert(LEFT_NODE(root) == NULL || PARENT_NODE(LEFT_NODE(root)) == root );
+	assert(RIGHT_NODE(root) == NULL || PARENT_NODE(RIGHT_NODE(root)) == root );
 
-	key = KEY(root); 
+	key = KEY(root);
 	if (minkey != NULL) {
 		if (ct_compare(key, minkey) <= 0) {
 			return 0;
@@ -282,19 +268,19 @@ static int ct_validate_range(node_t *root, PyObject *minkey, PyObject *maxkey)
 			return 0;
 		}
 	}
-	return 1; 
+	return 1;
 }
 
 
 int ct_validate(node_t *root)
 {
 	PyObject *key;
-	if (root == NULL) return 1; 
+	if (root == NULL) return 1;
 
 	assert(PARENT_NODE(root) == NULL);
-	assert(LEFT_NODE(root) == NULL || PARENT_NODE(LEFT_NODE(root)) == root ); 
-	assert(RIGHT_NODE(root) == NULL || PARENT_NODE(RIGHT_NODE(root)) == root ); 
+	assert(LEFT_NODE(root) == NULL || PARENT_NODE(LEFT_NODE(root)) == root );
+	assert(RIGHT_NODE(root) == NULL || PARENT_NODE(RIGHT_NODE(root)) == root );
 
-	key = KEY(root); 
+	key = KEY(root);
 	return ct_validate_range(LEFT_NODE(root), NULL, key) && ct_validate_range(RIGHT_NODE(root), key, NULL);
 }

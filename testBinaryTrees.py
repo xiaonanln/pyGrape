@@ -48,6 +48,14 @@ class BinaryTreeTest(unittest.TestCase):
 			bt.insert(i, i)
 			self.assertEqual(len(bt), i+1)
 
+	def testRemove(self):
+		N = 1000
+		bt = BinaryTree()
+		for i in xrange(N):
+			bt.insert(i, i)
+			self.assertEqual(len(bt), i+1)
+
+
 	def testSuccNode(self):
 		N = 200000
 		t = self.newRandomTree(N)

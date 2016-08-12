@@ -1,7 +1,7 @@
 
 from ctrees cimport *
 import sys
-
+from errors import InternalError
 
 cdef class BinaryTree:
 	cdef node_t *root
@@ -24,11 +24,12 @@ cdef class BinaryTree:
 		self.len += 1
 
 	cpdef remove(self, object key):
-		cdef int ret = ct_bintree_remove(&self.root, key)
-		if ret == 0:
+		cdef node_t *node = ct_find_node(self.root, key)
+		if node == NULL:
 			raise KeyError(key)
-		else:
-			self.len -= 1
+
+		ct_bintree_remove(&self.root, node)
+		self.len -= 1
 
 	cpdef TreeNode findNode(self, object key):
 		cdef node_t *node = ct_find_node(self.root, key)
@@ -59,6 +60,8 @@ cdef class BinaryTree:
 		if not valid:
 			raise AssertionError('invalid tree')
 
+_nullTreeNodeError = InternalError('TreeNode is null')
+
 cdef class TreeNode:
 	cdef BinaryTree owner
 	cdef node_t *node
@@ -70,18 +73,30 @@ cdef class TreeNode:
 
 	property value:
 		def __get__(self):
-			return <object>self.node.value
+			if self.node != NULL:
+				return <object>self.node.value 
+			else:
+				raise _nullTreeNodeError
 
 	property key:
 		def __get__(self):
-			return <object>(self.node.key)
+			if self.node != NULL:
+				return <object>(self.node.key)
+			else:
+				raise _nullTreeNodeError
 
 	property item:
 		def __get__(self):
 			cdef node_t *node = self.node
-			return (<object>node.key, <object>node.value)
+			if node != NULL:
+				return (<object>node.key, <object>node.value)
+			else:
+				raise _nullTreeNodeError
 
 	cpdef bint moveSucc(self):
+		if self.node == NULL:
+			raise _nullTreeNodeError
+
 		cdef node_t *node = ct_succ_node(self.owner.root, self.node)
 		if node != NULL:
 			self.node = node
@@ -90,12 +105,22 @@ cdef class TreeNode:
 			return False
 
 	cpdef bint movePrev(self):
+		if self.node == NULL:
+			raise _nullTreeNodeError
+			
 		cdef node_t *node = ct_prev_node(self.owner.root, self.node)
 		if node != NULL:
 			self.node = node
 			return True
 		else:
 			return False
+
+	def remove(self):
+		if self.node != NULL:
+			ct_bintree_remove(&self.owner.root, self.node)
+			self.node = NULL
+		else:
+			raise _nullTreeNodeError
 
 	def __str__(self):
 		return str((self.key, self.value))

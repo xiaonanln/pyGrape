@@ -24,7 +24,7 @@ void ct_delete_tree(node_t *root);
 node_t *ct_find_node(node_t *root, PyObject *key);
 
 int ct_bintree_insert(node_t **root, PyObject *key, PyObject *value);
-int ct_bintree_remove(node_t **root, PyObject *key);
+void ct_bintree_remove(node_t **root, node_t *node);
 
 node_t *ct_min_node(node_t *root);
 node_t *ct_max_node(node_t *root);

@@ -13,7 +13,7 @@ cdef extern from "ctrees.h":
 	node_t *ct_find_node(node_t *root, object key);
 
 	int ct_bintree_insert(node_t **root, object key, object value)
-	int ct_bintree_remove(node_t **root, object key)
+	void ct_bintree_remove(node_t **root, node_t *node)
 
 
 	node_t *ct_min_node(node_t *root)

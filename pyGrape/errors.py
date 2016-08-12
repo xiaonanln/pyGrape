@@ -4,3 +4,6 @@ class Error(Exception):
 
 class DuplicateIndexError(Error):
 	pass
+
+class InternalError(Error):
+	pass

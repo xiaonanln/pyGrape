@@ -1,4 +1,5 @@
 import os
+import random
 
 if os.name == 'nt':
 	if os.system('buildPyGrape.bat') != 0:
@@ -62,14 +63,26 @@ def testOperations():
 def testBinTrees():
 	from pyGrape.cython_trees import BinaryTree
 	t = BinaryTree()
-	t.insert(1, 2)
-	print len(t)
-	t.insert(2, 100)
-	print len(t)
-	# t.insert(2, 4)
-	t.insert(4, 3)
 
-	cursor = t.findNode(2)
-	print cursor.key, cursor.value
+	keys = []
+	for i in xrange(100):
+		key = random.randint(1, 1000)
+		try:
+			print 'insert', key
+			t.insert(key, key)
+			keys.append(key)
+		except KeyError:
+			pass
+
+	t.validate()
+	random.shuffle(keys)
+	for key in keys:
+		print 'remove', key, 
+		node = t.findNode(key)
+		assert node
+		node.remove()
+		# node.remove()
+		print 'ok'
+		t.validate()
 
 testBinTrees()

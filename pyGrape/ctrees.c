@@ -110,52 +110,57 @@ ct_bintree_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 	}
 }
 
-
-int
-ct_bintree_remove(node_t **rootaddr, PyObject *key)
+void
+ct_bintree_remove(node_t **rootaddr, node_t *node)
 {
-	int cmp_res;
+	node_t **pnode = NULL; 
 	node_t *tmp;
 
-	while (1) {
-		node_t *root = *rootaddr;
-		if (root == NULL) {
-			// can not find the key
-			return 0;
-		}
-
-		cmp_res = ct_compare(key, KEY(root));
-		if (cmp_res < 0) {
-			// use left sub-tree
-			rootaddr = &LEFT_NODE(root);
-		} else if (cmp_res > 0) {
-			// use right sub-tree
-			rootaddr = &RIGHT_NODE(root);
+	if (*rootaddr == node) {
+		// the node is the root
+		assert(PARENT_NODE(node) == NULL); 
+		pnode = rootaddr;
+	} else {
+		node_t *parent = PARENT_NODE(node); 
+		assert(parent != NULL); 
+		if (LEFT_NODE(parent) == node) {
+			pnode = &LEFT_NODE(parent); 
 		} else {
-			// key found, remove the root node
-			if (LEFT_NODE(root) == NULL) {
-				// replace the root with the right sub-tree
-				*rootaddr = RIGHT_NODE(root);
-				ct_delete_node(root);
-			} else if (RIGHT_NODE(root) == NULL) {
-				// replace the root with the left sub-tree
-				*rootaddr = LEFT_NODE(root);
-				ct_delete_node(root);
-			} else {
-				// both left and right sub-tree is non-null, replace by smallest key in right sub-tree
-				node_t **pleftmost = &RIGHT_NODE(root);
-				node_t *leftmost = RIGHT_NODE(root); // assert leftmost != NULL
-				while ((tmp = LEFT_NODE(leftmost)) != NULL) {
-					pleftmost = &LEFT_NODE(leftmost);
-					leftmost = tmp;
-				}
-				// found the leftmost node, copy its data to the root, then remove the left most node
-				ct_swap_data(root, leftmost);
-				*pleftmost = RIGHT_NODE(leftmost);
-				ct_delete_node(leftmost);
-			}
-			return 1;
+			assert(RIGHT_NODE(parent) == node); 
+			pnode = &RIGHT_NODE(parent); 
 		}
+	}
+
+	if (LEFT_NODE(node) == NULL) {
+		// replace the root with the right sub-tree
+		tmp = *pnode = RIGHT_NODE(node);
+		assert(node != NULL);
+		if (tmp != NULL) {
+			PARENT_NODE(tmp) = PARENT_NODE(node);
+		}
+		ct_delete_node(node);
+	} else if (RIGHT_NODE(node) == NULL) {
+		// replace the node with the left sub-tree
+		tmp = *pnode = LEFT_NODE(node);
+		assert(node != NULL);
+		PARENT_NODE(tmp) = PARENT_NODE(node);
+		ct_delete_node(node);
+	} else {
+		// both left and right sub-tree is non-null, replace by smallest key in right sub-tree
+		node_t **pleftmost = &RIGHT_NODE(node);
+		node_t *leftmost = RIGHT_NODE(node); // assert leftmost != NULL
+		while ((tmp = LEFT_NODE(leftmost)) != NULL) {
+			pleftmost = &LEFT_NODE(leftmost);
+			leftmost = tmp;
+		}
+		// found the leftmost node, copy its data to the root, then remove the left most node
+		ct_swap_data(node, leftmost);
+
+		tmp = *pleftmost = RIGHT_NODE(leftmost);
+		if (tmp != NULL) {
+			PARENT_NODE(tmp) = PARENT_NODE(leftmost);
+		}
+		ct_delete_node(leftmost);
 	}
 }
 
@@ -271,3 +276,216 @@ int ct_validate(node_t *root)
 	key = KEY(root);
 	return ct_validate_range(LEFT_NODE(root), NULL, key) && ct_validate_range(RIGHT_NODE(root), key, NULL);
 }
+
+// static int
+// is_red (node_t *node)
+// {
+// 	return (node != NULL) && (RED(node) == 1);
+// }
+
+// #define rb_new_node(key, value) ct_new_node(key, value, 1)
+
+// static node_t *
+// rb_single(node_t *root, int dir)
+// {
+// 	node_t *save = root->link[!dir];
+
+// 	root->link[!dir] = save->link[dir];
+// 	save->link[dir] = root;
+
+// 	RED(root) = 1;
+// 	RED(save) = 0;
+// 	return save;
+// }
+
+// static node_t *
+// rb_double(node_t *root, int dir)
+// {
+// 	root->link[!dir] = rb_single(root->link[!dir], !dir);
+// 	return rb_single(root, dir);
+// }
+
+// #define rb_new_node(key, value) ct_new_node(key, value, 1)
+
+// extern int
+// rb_insert(node_t **rootaddr, PyObject *key, PyObject *value)
+// {
+//     int new_node = 0;
+// 	node_t *root = *rootaddr;
+
+// 	if (root == NULL) {
+// 		/*
+// 		 We have an empty tree; attach the
+// 		 new node directly to the root
+// 		 */
+// 		root = rb_new_node(key, value);
+// 		new_node = 1;
+// 		if (root == NULL)
+// 			return -1; // got no memory
+// 	}
+// 	else {
+// 		node_t head; /* False tree root */
+// 		node_t *g, *t; /* Grandparent & parent */
+// 		node_t *p, *q; /* Iterator & parent */
+// 		int dir = 0;
+// 		int last = 0;
+
+// 		/* Set up our helpers */
+// 		t = &head;
+// 		g = NULL;
+// 		p = NULL;
+// 		RIGHT_NODE(t) = root;
+// 		LEFT_NODE(t) = NULL;
+// 		q = RIGHT_NODE(t);
+
+// 		/* Search down the tree for a place to insert */
+// 		for (;;) {
+// 			int cmp_res;
+// 			if (q == NULL) {
+// 				/* Insert a new node at the first null link */
+// 				q = rb_new_node(key, value);
+// 				new_node = 1;
+// 				p->link[dir] = q;
+// 				if (q == NULL)
+// 					return -1; // get no memory
+// 			}
+// 			else if (is_red(q->link[0]) && is_red(q->link[1])) {
+// 				/* Simple red violation: color flip */
+// 				RED(q) = 1;
+// 				RED(q->link[0]) = 0;
+// 				RED(q->link[1]) = 0;
+// 			}
+
+// 			if (is_red(q) && is_red(p)) {
+// 				/* Hard red violation: rotations necessary */
+// 				int dir2 = (t->link[1] == g);
+
+// 				if (q == p->link[last])
+// 					t->link[dir2] = rb_single(g, !last);
+// 				else
+// 					t->link[dir2] = rb_double(g, !last);
+// 			}
+
+// 			/*  Stop working if we inserted a new node. */
+// 			if (new_node)
+// 				break;
+
+// 			cmp_res = ct_compare(KEY(q), key);
+// 			if (cmp_res == 0) {       /* if key exists            */
+// 				Py_XDECREF(VALUE(q)); /* release old value object */
+// 				VALUE(q) = value;     /* set new value object     */
+// 				Py_INCREF(value);     /* take new value object    */
+// 				break;
+// 			}
+// 			last = dir;
+// 			dir = (cmp_res < 0);
+
+// 			/* Move the helpers down */
+// 			if (g != NULL)
+// 				t = g;
+
+// 			g = p;
+// 			p = q;
+// 			q = q->link[dir];
+// 		}
+// 		/* Update the root (it may be different) */
+// 		root = head.link[1];
+// 	}
+
+// 	/* Make the root black for simplified logic */
+// 	RED(root) = 0;
+// 	(*rootaddr) = root;
+// 	return new_node;
+// }
+
+// extern int
+// rb_remove(node_t **rootaddr, PyObject *key)
+// {
+// 	node_t *root = *rootaddr;
+
+// 	node_t head = { { NULL } }; /* False tree root */
+// 	node_t *q, *p, *g; /* Helpers */
+// 	node_t *f = NULL; /* Found item */
+// 	int dir = 1;
+
+// 	if (root == NULL)
+// 		return 0;
+
+// 	/* Set up our helpers */
+// 	q = &head;
+// 	g = p = NULL;
+// 	RIGHT_NODE(q) = root;
+
+// 	/*
+// 	 Search and push a red node down
+// 	 to fix red violations as we go
+// 	 */
+// 	while (q->link[dir] != NULL) {
+// 		int last = dir;
+// 		int cmp_res;
+
+// 		/* Move the helpers down */
+// 		g = p, p = q;
+// 		q = q->link[dir];
+
+// 		cmp_res =  ct_compare(KEY(q), key);
+
+// 		dir = cmp_res < 0;
+
+// 		/*
+// 		 Save the node with matching data and keep
+// 		 going; we'll do removal tasks at the end
+// 		 */
+// 		if (cmp_res == 0)
+// 			f = q;
+
+// 		/* Push the red node down with rotations and color flips */
+// 		if (!is_red(q) && !is_red(q->link[dir])) {
+// 			if (is_red(q->link[!dir]))
+// 				p = p->link[last] = rb_single(q, dir);
+// 			else if (!is_red(q->link[!dir])) {
+// 				node_t *s = p->link[!last];
+
+// 				if (s != NULL) {
+// 					if (!is_red(s->link[!last]) &&
+// 						!is_red(s->link[last])) {
+// 						/* Color flip */
+// 						RED(p) = 0;
+// 						RED(s) = 1;
+// 						RED(q) = 1;
+// 					}
+// 					else {
+// 						int dir2 = g->link[1] == p;
+
+// 						if (is_red(s->link[last]))
+// 							g->link[dir2] = rb_double(p, last);
+// 						else if (is_red(s->link[!last]))
+// 							g->link[dir2] = rb_single(p, last);
+
+// 						/* Ensure correct coloring */
+// 						RED(q) = RED(g->link[dir2]) = 1;
+// 						RED(g->link[dir2]->link[0]) = 0;
+// 						RED(g->link[dir2]->link[1]) = 0;
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	/* Replace and remove the saved node */
+// 	if (f != NULL) {
+// 		ct_swap_data(f, q);
+// 		p->link[p->link[1] == q] = q->link[q->link[0] == NULL];
+// 		ct_delete_node(q);
+// 	}
+
+// 	/* Update the root (it may be different) */
+// 	root = head.link[1];
+
+// 	/* Make the root black for simplified logic */
+// 	if (root != NULL)
+// 		RED(root) = 0;
+// 	*rootaddr = root;
+// 	return (f != NULL);
+// }
+

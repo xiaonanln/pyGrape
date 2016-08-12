@@ -8,9 +8,7 @@ cdef extern from "ctrees.h":
 		PyObject *key
 		PyObject *value
 
-	object ct_get_key(node_t *node);
-	object ct_get_value(node_t *node); 
-	void ct_delete_tree(node_t *root); 
+	void ct_delete_tree(node_t *root);
 
 	node_t *ct_find_node(node_t *root, object key);
 

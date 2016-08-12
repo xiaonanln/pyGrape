@@ -50,11 +50,27 @@ class BinaryTreeTest(unittest.TestCase):
 
 	def testRemove(self):
 		N = 1000
+		keys = []
 		bt = BinaryTree()
 		for i in xrange(N):
-			bt.insert(i, i)
-			self.assertEqual(len(bt), i+1)
+			key = random.randint(1, N * 100)
 
+			try:
+				bt.insert(key, key)
+				keys.append(key)
+			except KeyError:
+				continue 
+
+		self.assertEqual(len(keys), len(bt))
+		while keys:
+			i = random.randint(0, len(keys)-1)
+			key = keys[i]
+			keys[i:i+1] = []
+
+			bt.remove(key)
+			bt.validate()
+
+		bt.validate()
 
 	def testSuccNode(self):
 		N = 200000

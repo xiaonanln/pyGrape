@@ -68,18 +68,19 @@ class BinaryTreeTest(unittest.TestCase):
 			keys[i:i+1] = []
 
 			bt.remove(key)
+			self.assertEqual(len(bt), len(keys))
 			bt.validate()
 
 		bt.validate()
 
 	def testSuccNode(self):
-		N = 200000
+		N = 100000
 		t = self.newRandomTree(N)
 
 		startTravelTime = time.time()
 
 		for i in  xrange(10):
-			node = t.findMin()
+			node = t.findMinNode()
 			nodeCount = 0
 			lastkey, lastval = node.key, node.value
 
@@ -89,14 +90,38 @@ class BinaryTreeTest(unittest.TestCase):
 				if not node.moveSucc():
 					break
 
-				key, val = node.key, node.value
+				key, val = node.item
 				assert key > lastkey, (key, lastkey)
 				lastkey, lastval = key, val
 
-		print 'travel tree takes %ss' % (time.time() - startTravelTime)
+		print 'succ travel tree takes %ss' % (time.time() - startTravelTime)
 
 		self.assertEqual(nodeCount, len(t))
 
+	def testPrevNode(self):
+		N = 100000
+		t = self.newRandomTree(N)
+
+		startTravelTime = time.time()
+
+		for i in  xrange(10):
+			node = t.findMaxNode()
+			nodeCount = 0
+			lastkey, lastval = node.key, node.value
+
+			while node:
+				nodeCount += 1
+				# print >>sys.stderr, 'getSucc'
+				if not node.movePrev():
+					break
+
+				key, val = node.item
+				assert key < lastkey, (key, lastkey)
+				lastkey, lastval = key, val
+
+		print 'prev travel tree takes %ss' % (time.time() - startTravelTime)
+
+		self.assertEqual(nodeCount, len(t))
 	def newRandomTree(self, n):
 		keys = set()
 		t = BinaryTree()

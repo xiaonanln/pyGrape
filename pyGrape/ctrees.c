@@ -181,50 +181,15 @@ node_t *ct_max_node(node_t *root)
 	return root;
 }
 
-static node_t *
-ct_prev_node_slow(node_t *root, PyObject *key)
-{
-	node_t *prev = NULL;
-	node_t *node = root;
-	int cval;
-
-	while (node != NULL) {
-		cval = ct_compare(key, KEY(node));
-		if (cval == 0)
-			break;
-		else if (cval < 0)
-			node = LEFT_NODE(node);
-		else {
-			if ((prev == NULL) || (ct_compare(KEY(node), KEY(prev)) > 0))
-				prev = node;
-			node = RIGHT_NODE(node);
-		}
-	}
-	if (node == NULL) /* stay at dead end (None) */
-		return NULL;
-	/* found node of key */
-	if (LEFT_NODE(node) != NULL) {
-		/* find biggest node of left subtree */
-		node = LEFT_NODE(node);
-		while (RIGHT_NODE(node) != NULL)
-			node = RIGHT_NODE(node);
-		if (prev == NULL)
-			prev = node;
-		else if (ct_compare(KEY(node), KEY(prev)) > 0)
-			prev = node;
-	}
-	return prev;
-}
-
-
 node_t *ct_succ_node(node_t *root, node_t *node)
 {
 	node_t *succ;
+	node_t *tmp; 
 
 	if ( (succ = RIGHT_NODE(node)) != NULL) {
 		/* find smallest node of right subtree */
-		while (LEFT_NODE(succ) != NULL) {
-			succ = LEFT_NODE(succ);
+		while ( (tmp=LEFT_NODE(succ)) != NULL) {
+			succ = tmp;
 		}
 		return succ;
 	} else {
@@ -237,7 +202,7 @@ node_t *ct_succ_node(node_t *root, node_t *node)
 					node = parent;
 					parent = PARENT_NODE(node);
 				} else {
-					assert(LEFT_NODE(parent) == node);
+					// assert(LEFT_NODE(parent) == node);
 					return parent;
 				}
 		}
@@ -246,7 +211,29 @@ node_t *ct_succ_node(node_t *root, node_t *node)
 
 node_t *ct_prev_node(node_t *root, node_t *node)
 {
-	return ct_prev_node_slow(root, KEY(node));
+	node_t *prev;
+	node_t *tmp; 
+
+	if ((prev = LEFT_NODE(node)) != NULL) {
+		// find the largest node of left-subtee
+		while ( (tmp=RIGHT_NODE(prev)) != NULL) {
+			prev = tmp;
+		}
+		return prev; 
+	} else {
+		// node has no left sub-tree
+		node_t *parent = PARENT_NODE(node); 
+		while (1) {
+			if (parent == NULL) {
+				return NULL; 
+			} else if (LEFT_NODE(parent) == node) {
+				node = parent; 
+				parent = PARENT_NODE(node); 
+			} else {
+				return parent; 
+			}
+		}	
+	}
 }
 
 static int ct_validate_range(node_t *root, PyObject *minkey, PyObject *maxkey)

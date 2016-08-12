@@ -30,40 +30,26 @@ cdef class BinaryTree:
 		else:
 			self.len -= 1
 
-	cpdef TreeNode find(self, object key):
+	cpdef TreeNode findNode(self, object key):
 		cdef node_t *node = ct_find_node(self.root, key)
 		if node == NULL:
 			raise KeyError(key)
 
 		return TreeNode(self, <long>node)
 
-	cpdef TreeNode findMin(self):
+	cpdef TreeNode findMinNode(self):
 		cdef node_t *node = ct_min_node(self.root)
 		if node == NULL:
 			return None
 
 		return TreeNode(self, <long>node)
 
-	cpdef TreeNode findMax(self):
+	cpdef TreeNode findMaxNode(self):
 		cdef node_t *node = ct_max_node(self.root)
 		if node == NULL:
 			return None
 
 		return TreeNode(self, <long>node)
-
-	# cpdef TreeNode getSucc(self, TreeNode node):
-	# 	cdef node_t *succNode = ct_succ_node(self.root, node.node)
-	# 	if succNode == NULL:
-	# 		return None
-
-	# 	return TreeNode(self, <long>succNode)
-
-	# cpdef TreeNode getPrev(self, TreeNode node):
-	# 	cdef node_t *prevNode = ct_prev_node(self.root, node.node)
-	# 	if prevNode == NULL:
-	# 		return None
-
-	# 	return TreeNode(self, <long>prevNode)
 
 	def __len__(self):
 		return self.len

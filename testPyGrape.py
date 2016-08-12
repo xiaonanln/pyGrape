@@ -69,7 +69,7 @@ def testBinTrees():
 	# t.insert(2, 4)
 	t.insert(4, 3)
 
-	cursor = t.find(2)
+	cursor = t.findNode(2)
 	print cursor.key, cursor.value
 
 testBinTrees()

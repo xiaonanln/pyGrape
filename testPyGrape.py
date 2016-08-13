@@ -64,25 +64,24 @@ def testBinTrees():
 	from pyGrape.cython_trees import BinaryTree
 	t = BinaryTree()
 
-	keys = []
+	keys = set()
 	for i in xrange(100):
-		key = random.randint(1, 1000)
+		key = random.randint(1, 10)
 		try:
-			print 'insert', key
 			t.insert(key, key)
-			keys.append(key)
+			keys.add(key)
 		except KeyError:
 			pass
+			
+	print len(t), keys
 
 	t.validate()
+	keys = list(keys)
 	random.shuffle(keys)
 	for key in keys:
-		print 'remove', key, 
 		node = t.findNode(key)
 		assert node
 		node.remove()
-		# node.remove()
-		print 'ok'
 		t.validate()
 
 testBinTrees()

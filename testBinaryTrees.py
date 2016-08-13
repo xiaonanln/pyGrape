@@ -5,7 +5,7 @@ import time
 import cProfile
 import os
 
-from pyGrape.cython_trees import BinaryTree
+from pyGrape.cython_trees import BinaryTree, RBTree
 
 class BinaryTreeTest(unittest.TestCase):
 	def __init__(self, *args):
@@ -75,7 +75,7 @@ class BinaryTreeTest(unittest.TestCase):
 
 	def testSuccNode(self):
 		N = 100000
-		t = self.newRandomTree(N)
+		t = self.newRandomTree(BinaryTree, N)
 
 		startTravelTime = time.time()
 
@@ -100,7 +100,7 @@ class BinaryTreeTest(unittest.TestCase):
 
 	def testPrevNode(self):
 		N = 100000
-		t = self.newRandomTree(N)
+		t = self.newRandomTree(BinaryTree, N)
 
 		startTravelTime = time.time()
 
@@ -122,9 +122,14 @@ class BinaryTreeTest(unittest.TestCase):
 		print 'prev travel tree takes %ss' % (time.time() - startTravelTime)
 
 		self.assertEqual(nodeCount, len(t))
-	def newRandomTree(self, n):
+
+	def testRBTree(self):
+		N = 10000
+		t = self.newRandomTree(RBTree, N)
+
+	def newRandomTree(self, treeCls, n):
 		keys = set()
-		t = BinaryTree()
+		t = treeCls()
 		for i in xrange(n):
 			key  = random.randint(1, n*100)
 			while key in keys:

@@ -19,7 +19,7 @@ cdef class BinaryTree:
 		if ret < 0:
 			raise MemoryError()
 		elif ret == 0:
-			raise KeyError('duplicate key %s' % (key, ))
+			raise KeyError(key)
 
 		self.len += 1
 
@@ -55,10 +55,19 @@ cdef class BinaryTree:
 	def __len__(self):
 		return self.len
 
-	cpdef validate(self):
+	cpdef int validate(self) except *:
 		cdef int valid = ct_validate(self.root)
-		if not valid:
-			raise AssertionError('invalid tree')
+		return valid
+
+cdef class RBTree(BinaryTree):
+	cpdef insert(self, object key, object value):
+		cdef int ret = rb_insert(&self.root, key, value)
+		if ret < 0:
+			raise MemoryError()
+		elif ret == 0:
+			raise KeyError(key)
+
+		self.len += 1
 
 _nullTreeNodeError = InternalError('TreeNode is null')
 

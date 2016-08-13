@@ -35,5 +35,8 @@ node_t *ct_prev_node(node_t *root, node_t *node);
 
 int ct_validate(node_t *root);
 
+
+int rb_insert(node_t **root, PyObject *key, PyObject *value);
+
 #endif // __CTREES_H
 

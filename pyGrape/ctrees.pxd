@@ -22,3 +22,7 @@ cdef extern from "ctrees.h":
 	node_t *ct_succ_node(node_t *root, node_t *node)
 
 	int ct_validate(node_t *root)
+
+
+	int rb_insert(node_t **root, object key, object value);
+	

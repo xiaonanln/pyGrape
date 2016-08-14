@@ -35,8 +35,10 @@ class BinaryTreeTest(unittest.TestCase):
 			n = random.randint(1, N//100)
 			try:
 				# print 'remove',n
-				bt.remove(n)
+				node = bt.findNode(n)
+				bt.removeNode( node)
 				expectedLen -= 1
+
 			except KeyError:
 				pass
 
@@ -67,7 +69,8 @@ class BinaryTreeTest(unittest.TestCase):
 			key = keys[i]
 			keys[i:i+1] = []
 
-			bt.remove(key)
+			node = bt.findNode(key)
+			bt.removeNode(node)
 			self.assertEqual(len(bt), len(keys))
 			bt.validate()
 
@@ -119,13 +122,23 @@ class BinaryTreeTest(unittest.TestCase):
 				assert key < lastkey, (key, lastkey)
 				lastkey, lastval = key, val
 
-		print 'prev travel tree takes %ss' % (time.time() - startTravelTime)
+		print >>sys.stderr, 'prev travel tree takes %ss' % (time.time() - startTravelTime)
 
 		self.assertEqual(nodeCount, len(t))
 
 	def testRBTree(self):
-		N = 10000
+		N = 10
 		t = self.newRandomTree(RBTree, N)
+		keys = t.keys()
+		print >>sys.stderr, 'RBTree: len', len(t), 'keys', keys
+
+		random.shuffle(keys)
+		for key in keys:
+			node = t.findNode(key)
+			t.removeNode(node)
+			t.validate()
+
+		print 'testRBTree', len(t), t.keys()
 
 	def newRandomTree(self, treeCls, n):
 		keys = set()
@@ -137,6 +150,7 @@ class BinaryTreeTest(unittest.TestCase):
 
 			keys.add(key)
 			t.insert(key, i)
+			t.validate()
 
 		self.assertEqual(len(t), n)
 		t.validate()

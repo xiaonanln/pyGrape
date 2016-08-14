@@ -25,4 +25,6 @@ cdef extern from "ctrees.h":
 
 
 	int rb_insert(node_t **root, object key, object value);
+	int rb_remove(node_t **rootaddr, node_t *node); 
 	
+	void ct_bintree_keys(node_t *root, object list); 

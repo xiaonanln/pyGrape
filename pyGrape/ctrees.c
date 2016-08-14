@@ -15,6 +15,13 @@
 
 #define ct_compare PyObject_Compare
 
+#define my_assert(x, s, ret)	do {	\
+	if (!(x)) {					\
+		PyErr_SetString(PyExc_AssertionError, (s)); 	\
+		return ret; \
+	}	\
+} while(0)
+
 static node_t *
 ct_new_node(node_t *parent, PyObject *key, PyObject *value, int xdata)
 {
@@ -276,7 +283,7 @@ int ct_validate(node_t *root)
 	if (root == NULL) return 1;
 
 	if (PARENT_NODE(root) != NULL) {
-		PyErr_SetString(PyExc_AssertionError, "parent node is null");
+		PyErr_SetString(PyExc_AssertionError, "parent of root is not null");
 		return 0;
 	}
 	if (!(LEFT_NODE(root) == NULL || PARENT_NODE(LEFT_NODE(root)) == root )) {
@@ -303,8 +310,17 @@ rb_single(node_t *root, int dir)
 {
 	node_t *save = root->link[!dir];
 
-	root->link[!dir] = save->link[dir];
+	node_t *tmp = root->link[!dir] = save->link[dir];
+	// my_assert(tmp != NULL, "tmp is null", NULL);
+	if (tmp != NULL) {
+		PARENT_NODE(tmp) = root; 
+	}
+
 	save->link[dir] = root;
+	// my_assert(root != NULL, "root is null", NULL);
+	// if (root != NULL) {
+		PARENT_NODE(root) = save; 	
+	// }
 
 	RED(root) = 1;
 	RED(save) = 0;
@@ -314,7 +330,8 @@ rb_single(node_t *root, int dir)
 static node_t *
 rb_double(node_t *root, int dir)
 {
-	root->link[!dir] = rb_single(root->link[!dir], !dir);
+	node_t *tmp = root->link[!dir] = rb_single(root->link[!dir], !dir);
+	PARENT_NODE(tmp) = root; 
 	return rb_single(root, dir);
 }
 
@@ -327,10 +344,7 @@ rb_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 	node_t *root = *rootaddr;
 
 	if (root == NULL) {
-		/*
-		 We have an empty tree; attach the
-		 new node directly to the root
-		 */
+		// case 1, root == NULL
 		root = rb_new_node(NULL, key, value);
 		new_node = 1;
 		if (root == NULL)
@@ -373,10 +387,13 @@ rb_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 				/* Hard red violation: rotations necessary */
 				int dir2 = (t->link[1] == g);
 
-				if (q == p->link[last])
-					t->link[dir2] = rb_single(g, !last);
-				else
-					t->link[dir2] = rb_double(g, !last);
+				if (q == p->link[last]) {
+					node_t * tmp = t->link[dir2] = rb_single(g, !last);
+					PARENT_NODE(tmp) = t; 
+				} else {
+					node_t *tmp = t->link[dir2] = rb_double(g, !last);
+					PARENT_NODE(tmp) = t; 
+				}
 			}
 
 			/*  Stop working if we inserted a new node. */
@@ -408,97 +425,110 @@ rb_insert(node_t **rootaddr, PyObject *key, PyObject *value)
 	/* Make the root black for simplified logic */
 	RED(root) = 0;
 	(*rootaddr) = root;
+	PARENT_NODE(root) = NULL; 
 	return new_node;
 }
 
-// extern int
-// rb_remove(node_t **rootaddr, PyObject *key)
-// {
-// 	node_t *root = *rootaddr;
+extern int
+rb_remove(node_t **rootaddr, node_t *_node)
+{
+	PyObject *key = KEY(_node);
+	node_t *root = *rootaddr;
 
-// 	node_t head = { { NULL } }; /* False tree root */
-// 	node_t *q, *p, *g; /* Helpers */
-// 	node_t *f = NULL; /* Found item */
-// 	int dir = 1;
+	node_t head = { { NULL } }; /* False tree root */
+	node_t *q, *p, *g; /* Helpers */
+	node_t *f = NULL; /* Found item */
+	int dir = 1;
 
-// 	if (root == NULL)
-// 		return 0;
+	if (root == NULL)
+		return 0;
 
-// 	/* Set up our helpers */
-// 	q = &head;
-// 	g = p = NULL;
-// 	RIGHT_NODE(q) = root;
+	/* Set up our helpers */
+	q = &head;
+	g = p = NULL;
+	RIGHT_NODE(q) = root;
 
-// 	/*
-// 	 Search and push a red node down
-// 	 to fix red violations as we go
-// 	 */
-// 	while (q->link[dir] != NULL) {
-// 		int last = dir;
-// 		int cmp_res;
+	/*
+	 Search and push a red node down
+	 to fix red violations as we go
+	 */
+	while (q->link[dir] != NULL) {
+		int last = dir;
+		int cmp_res;
 
-// 		/* Move the helpers down */
-// 		g = p, p = q;
-// 		q = q->link[dir];
+		/* Move the helpers down */
+		g = p, p = q;
+		q = q->link[dir];
 
-// 		cmp_res =  ct_compare(KEY(q), key);
+		cmp_res =  ct_compare(KEY(q), key);
 
-// 		dir = cmp_res < 0;
+		dir = cmp_res < 0;
 
-// 		/*
-// 		 Save the node with matching data and keep
-// 		 going; we'll do removal tasks at the end
-// 		 */
-// 		if (cmp_res == 0)
-// 			f = q;
+		/*
+		 Save the node with matching data and keep
+		 going; we'll do removal tasks at the end
+		 */
+		if (cmp_res == 0)
+			f = q;
 
-// 		/* Push the red node down with rotations and color flips */
-// 		if (!is_red(q) && !is_red(q->link[dir])) {
-// 			if (is_red(q->link[!dir]))
-// 				p = p->link[last] = rb_single(q, dir);
-// 			else if (!is_red(q->link[!dir])) {
-// 				node_t *s = p->link[!last];
+		/* Push the red node down with rotations and color flips */
+		if (!is_red(q) && !is_red(q->link[dir])) {
+			if (is_red(q->link[!dir]))
+				p = p->link[last] = rb_single(q, dir);
+			else if (!is_red(q->link[!dir])) {
+				node_t *s = p->link[!last];
 
-// 				if (s != NULL) {
-// 					if (!is_red(s->link[!last]) &&
-// 						!is_red(s->link[last])) {
-// 						/* Color flip */
-// 						RED(p) = 0;
-// 						RED(s) = 1;
-// 						RED(q) = 1;
-// 					}
-// 					else {
-// 						int dir2 = g->link[1] == p;
+				if (s != NULL) {
+					if (!is_red(s->link[!last]) &&
+						!is_red(s->link[last])) {
+						/* Color flip */
+						RED(p) = 0;
+						RED(s) = 1;
+						RED(q) = 1;
+					}
+					else {
+						int dir2 = g->link[1] == p;
 
-// 						if (is_red(s->link[last]))
-// 							g->link[dir2] = rb_double(p, last);
-// 						else if (is_red(s->link[!last]))
-// 							g->link[dir2] = rb_single(p, last);
+						if (is_red(s->link[last]))
+							g->link[dir2] = rb_double(p, last);
+						else if (is_red(s->link[!last]))
+							g->link[dir2] = rb_single(p, last);
 
-// 						/* Ensure correct coloring */
-// 						RED(q) = RED(g->link[dir2]) = 1;
-// 						RED(g->link[dir2]->link[0]) = 0;
-// 						RED(g->link[dir2]->link[1]) = 0;
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
+						/* Ensure correct coloring */
+						RED(q) = RED(g->link[dir2]) = 1;
+						RED(g->link[dir2]->link[0]) = 0;
+						RED(g->link[dir2]->link[1]) = 0;
+					}
+				}
+			}
+		}
+	}
 
-// 	/* Replace and remove the saved node */
-// 	if (f != NULL) {
-// 		ct_swap_data(f, q);
-// 		p->link[p->link[1] == q] = q->link[q->link[0] == NULL];
-// 		ct_delete_node(q);
-// 	}
+	/* Replace and remove the saved node */
+	if (f != NULL) {
+		ct_swap_data(f, q);
+		p->link[p->link[1] == q] = q->link[q->link[0] == NULL];
+		ct_delete_node(q);
+	}
 
-// 	/* Update the root (it may be different) */
-// 	root = head.link[1];
+	/* Update the root (it may be different) */
+	root = head.link[1];
 
-// 	/* Make the root black for simplified logic */
-// 	if (root != NULL)
-// 		RED(root) = 0;
-// 	*rootaddr = root;
-// 	return (f != NULL);
-// }
+	/* Make the root black for simplified logic */
+	if (root != NULL)
+		RED(root) = 0;
+	*rootaddr = root;
+	return (f != NULL);
+}
 
+
+void ct_bintree_keys(node_t *root, PyObject *list)
+{
+	if (root == NULL) {
+		return ;
+	}
+
+	ct_bintree_keys(LEFT_NODE(root), list);
+	PyList_Append(list, KEY(root)); 
+	ct_bintree_keys(RIGHT_NODE(root), list);
+}

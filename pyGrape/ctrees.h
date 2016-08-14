@@ -37,6 +37,9 @@ int ct_validate(node_t *root);
 
 
 int rb_insert(node_t **root, PyObject *key, PyObject *value);
+int rb_remove(node_t **rootaddr, node_t *node); 
+
+void ct_bintree_keys(node_t *root, PyObject *list); 
 
 #endif // __CTREES_H
 

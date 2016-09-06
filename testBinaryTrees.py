@@ -126,11 +126,11 @@ class BinaryTreeTest(unittest.TestCase):
 
 		self.assertEqual(nodeCount, len(t))
 
-	def testRBTree(self):
-		N = 10
+	def testRBTreeBasic(self):
+		N = 10000
 		t = self.newRandomTree(RBTree, N)
 		keys = t.keys()
-		print >>sys.stderr, 'RBTree: len', len(t), 'keys', keys
+		# print >>sys.stderr, 'RBTree: len', len(t), 'keys', keys
 
 		random.shuffle(keys)
 		for key in keys:
@@ -140,6 +140,33 @@ class BinaryTreeTest(unittest.TestCase):
 
 		print 'testRBTree', len(t), t.keys()
 
+	def testRBTreeDeep(self):
+		N = 10000
+		t = RBTree()
+		keys = set()
+		REMOVE_PROB = 0.7
+		
+		def genKey():
+			while True:
+				k = random.randint(1, N * 100)
+				if k not in keys:
+					keys.add(k)
+					return k
+		
+		for i in xrange(N):
+			key = genKey()
+			t.insert(key, 1)
+			self.assertEqual(len(t), len(keys))
+			t.validate()
+
+			if len(t) > 0 and random.random() < REMOVE_PROB:
+				k = random.choice(list(keys)) # key to remove
+				node = t.findNode(k)
+				t.removeNode(node)
+				keys.remove(k)
+				t.validate()
+				self.assertEqual(len(t), len(keys))
+		
 	def newRandomTree(self, treeCls, n):
 		keys = set()
 		t = treeCls()

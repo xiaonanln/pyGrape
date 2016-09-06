@@ -438,6 +438,7 @@ rb_remove(node_t **rootaddr, node_t *_node)
 	node_t head = { { NULL } }; /* False tree root */
 	node_t *q, *p, *g; /* Helpers */
 	node_t *f = NULL; /* Found item */
+	node_t *tmp;
 	int dir = 1;
 
 	if (root == NULL)
@@ -473,8 +474,11 @@ rb_remove(node_t **rootaddr, node_t *_node)
 
 		/* Push the red node down with rotations and color flips */
 		if (!is_red(q) && !is_red(q->link[dir])) {
-			if (is_red(q->link[!dir]))
-				p = p->link[last] = rb_single(q, dir);
+			if (is_red(q->link[!dir])) {
+				tmp = rb_single(q, dir);
+				PARENT_NODE(tmp) = p;
+				p = p->link[last] = tmp;
+			}
 			else if (!is_red(q->link[!dir])) {
 				node_t *s = p->link[!last];
 
@@ -489,10 +493,14 @@ rb_remove(node_t **rootaddr, node_t *_node)
 					else {
 						int dir2 = g->link[1] == p;
 
-						if (is_red(s->link[last]))
-							g->link[dir2] = rb_double(p, last);
-						else if (is_red(s->link[!last]))
-							g->link[dir2] = rb_single(p, last);
+						if (is_red(s->link[last])) {
+							tmp = g->link[dir2] = rb_double(p, last);
+							PARENT_NODE(tmp) = g;
+						}
+						else if (is_red(s->link[!last])) {
+							tmp = g->link[dir2] = rb_single(p, last);
+							PARENT_NODE(tmp) = g;
+						}
 
 						/* Ensure correct coloring */
 						RED(q) = RED(g->link[dir2]) = 1;
@@ -515,8 +523,10 @@ rb_remove(node_t **rootaddr, node_t *_node)
 	root = head.link[1];
 
 	/* Make the root black for simplified logic */
-	if (root != NULL)
+	if (root != NULL) {
 		RED(root) = 0;
+		PARENT_NODE(root) = NULL;
+	}
 	*rootaddr = root;
 	return (f != NULL);
 }

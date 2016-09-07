@@ -1,10 +1,12 @@
 all: buildlib
 
+.PHONY: buildlib test testct clean cleantmp
+
 buildlib:
 	python buildPyGrape.py build_ext --inplace
 
-test:
-	python testPyGrape.py
+test: buildlib
+	python test.py
 
 testct:
 	python testBinaryTrees.py

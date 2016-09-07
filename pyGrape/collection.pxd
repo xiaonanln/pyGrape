@@ -1,5 +1,8 @@
 cimport indexing
 
+cdef class Cursor:
+	pass
+
 cdef class Collection:
 
 	cdef readonly str name 
@@ -8,7 +11,7 @@ cdef class Collection:
 
 	cpdef dict insertOne(self, dict doc)
 
-	cpdef list find(self, dict query)
+	cpdef Cursor find(self, dict query)
 
 	cpdef size_t remove(self, dict query) 
 
@@ -19,3 +22,4 @@ cdef class Collection:
 	cpdef list updateMany(self, dict query, dict update)
 
 	cdef list _generateTravelPlan(self, dict query)
+

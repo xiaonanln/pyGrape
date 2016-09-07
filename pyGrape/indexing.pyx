@@ -1,4 +1,7 @@
 
+from itertools import izip
+from cython_trees cimport RBTree
+
 # use tuples as special values
 cpdef tuple MIN_VALUE = ('$minValue', )
 cpdef tuple MAX_VALUE = ('$maxValue', )
@@ -6,7 +9,7 @@ cpdef tuple MAX_VALUE = ('$maxValue', )
 cdef int cmpValues(tuple v1, tuple v2):
 	cdef int c
 	assert len(v1) == len(v2), (v1, v2)
-	for vv1, vv2 in zip(v1, v2):
+	for vv1, vv2 in izip(v1, v2):
 
 		if vv2 is MIN_VALUE: # only v2 can be special values
 			return 1
@@ -23,18 +26,19 @@ cdef class Index:
 
 	def __cinit__(self, tuple indexKeys):
 		self.indexKeys = indexKeys
-		self.docs = {}
+		self.tree = RBTree()
 
 	def __str__(self):
 		return "Index<%s>" % ','.join(['%s@%d' % (key, order) for key, order in self.indexKeys])
 
+	def __len__(self):
+		return len(self.tree)
+
 	cdef void insert( self, dict doc ):
 		cdef tuple indexValues = self.getIndexValues( doc ) # get the index value of doc
 		# print 'Index.insertOne', self, indexValues, doc
-		try:
-			self.docs[indexValues].append(doc)
-		except KeyError:
-			self.docs[indexValues] = [doc]
+		cdef tuple treeKey = (indexValues, doc['_id'])
+		self.tree.insert(treeKey, doc)
 
 	cdef void remove(self, dict doc):
 		cdef tuple indexValues = self.getIndexValues( doc ) # get the index value of doc

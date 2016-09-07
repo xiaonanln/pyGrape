@@ -4,8 +4,6 @@ import sys
 from errors import InternalError
 
 cdef class BinaryTree:
-	cdef node_t *root
-	cdef readonly size_t len
 
 	def __cinit__(self):
 		self.root = NULL
@@ -87,8 +85,6 @@ cdef class RBTree(BinaryTree):
 _nullTreeNodeError = InternalError('TreeNode is null')
 
 cdef class TreeNode:
-	cdef BinaryTree owner
-	cdef node_t *node
 
 	def __cinit__(self, BinaryTree tree, _node):
 		self.owner = tree
@@ -139,7 +135,7 @@ cdef class TreeNode:
 		else:
 			return False
 
-	def remove(self):
+	cpdef void remove(self):
 		if self.node != NULL:
 			self.owner.removeNode(self)
 		else:

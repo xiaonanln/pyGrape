@@ -22,6 +22,9 @@ cdef bint _matchDocWithQuery(dict doc, dict query):
 	print '_matchDocWithQuery', doc, query, True
 	return True
 
+cdef class Cursor:
+	pass
+
 cdef class Collection:
 
 	def __cinit__(self, str name):
@@ -30,6 +33,9 @@ cdef class Collection:
 		self.indexes = {
 			PRIMARY_INDEX_KEYS : self._idIndex,
 		}
+
+	def __len__(self):
+		return len(self._idIndex)
 
 	cpdef dict insertOne(self, dict doc):
 		cdef tuple indexKeys
@@ -115,7 +121,7 @@ cdef class Collection:
 
 		return docs
 
-	cpdef list find(self, dict query):
+	cpdef Cursor find(self, dict query):
 		# print 'find', query
 		cdef list searchPlan = self._generateTravelPlan(query)
 		cdef IndexTraveller tr

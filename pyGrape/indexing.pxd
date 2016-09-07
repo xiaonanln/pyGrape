@@ -1,9 +1,11 @@
+from cython_trees cimport RBTree
+
 cpdef tuple MIN_VALUE
 cpdef tuple MAX_VALUE
 
 cdef class Index:
 	cdef tuple indexKeys
-	cdef dict docs
+	cdef RBTree tree
 
 	cdef void insert(self, dict doc )
 	

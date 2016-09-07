@@ -33,6 +33,5 @@ cpdef str newObjectId():
     _inc = (_inc + 1) % 0xFFFFFF
 
     oid = binascii.hexlify(oid)
-    print 'newObjectId', oid
     return oid
 
